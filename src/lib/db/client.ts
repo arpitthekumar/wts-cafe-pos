@@ -23,14 +23,23 @@ createTables(db)
 function runMigrations(db: any) {
   try {
     // Check if status column exists in tables table
-    const tableInfo = db.prepare("PRAGMA table_info(tables)").all() as Array<{ name: string }>
-    const hasStatusColumn = tableInfo.some((col: { name: string }) => col.name === "status")
+    const tablesInfo = db.prepare("PRAGMA table_info(tables)").all() as Array<{ name: string }>
+    const hasStatusColumn = tablesInfo.some((col: { name: string }) => col.name === "status")
     
     if (!hasStatusColumn) {
       console.log("Adding status column to tables table...")
       db.prepare("ALTER TABLE tables ADD COLUMN status TEXT DEFAULT 'empty'").run()
       // Update existing rows to have 'empty' status
       db.prepare("UPDATE tables SET status = 'empty' WHERE status IS NULL").run()
+    }
+
+    // Check if customerEmail column exists in orders table
+    const ordersInfo = db.prepare("PRAGMA table_info(orders)").all() as Array<{ name: string }>
+    const hasCustomerEmailColumn = ordersInfo.some((col: { name: string }) => col.name === "customerEmail")
+    
+    if (!hasCustomerEmailColumn) {
+      console.log("Adding customerEmail column to orders table...")
+      db.prepare("ALTER TABLE orders ADD COLUMN customerEmail TEXT").run()
     }
   } catch (error: any) {
     // Migration failed, but continue

@@ -60,6 +60,7 @@ export interface Order {
   createdAt: string
   updatedAt: string
   customerName?: string
+  customerEmail?: string
   notes?: string
 }
 

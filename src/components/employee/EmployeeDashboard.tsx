@@ -16,6 +16,8 @@ export function EmployeeDashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+  const [showAddItemsModal, setShowAddItemsModal] = useState(false)
   const cafeId = (session?.user as any)?.cafeId
 
   useEffect(() => {
@@ -160,7 +162,7 @@ export function EmployeeDashboard() {
         )}
 
         <div className="mb-6">
-          <TablesDashboard cafeId={cafeId} />
+          <TablesDashboard cafeId={cafeId || "cafe-1"} />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">

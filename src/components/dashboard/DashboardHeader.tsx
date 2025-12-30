@@ -4,6 +4,7 @@ import { signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui"
 import Link from "next/link"
+import { ThemeToggle } from "../common"
 
 interface DashboardHeaderProps {
   title: string
@@ -48,6 +49,7 @@ export function DashboardHeader({ title, subtitle, role }: DashboardHeaderProps)
         <Button variant="ghost" size="sm" onClick={handleLogout}>
           Logout
         </Button>
+        <ThemeToggle/>
       </div>
     </div>
   )

@@ -94,13 +94,14 @@ export const orders = {
     const now = new Date().toISOString()
     db.prepare(`
       UPDATE orders 
-      SET status = ?, total = ?, customerName = ?, notes = ?, updatedAt = ?
+      SET status = ?, total = ?, customerName = ?, customerEmail = ?, notes = ?, updatedAt = ?
       WHERE id = ?
     `).run(
       updates.status ?? order.status,
       updates.total ?? order.total,
-      updates.customerName ?? order.customerName,
-      updates.notes ?? order.notes,
+      updates.customerName ?? order.customerName ?? null,
+      updates.customerEmail ?? order.customerEmail ?? null,
+      updates.notes ?? order.notes ?? null,
       now,
       id
     )

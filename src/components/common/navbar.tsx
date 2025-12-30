@@ -88,7 +88,7 @@ export default function Navbar() {
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>
-                <ThemeToggle />
+                <ThemeToggle/>
             </div>
         </nav>
     )

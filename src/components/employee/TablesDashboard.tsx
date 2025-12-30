@@ -12,14 +12,20 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
   const [tables, setTables] = useState<Table[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedTable, setSelectedTable] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!cafeId) {
+      setLoading(false)
+      return
+    }
     fetchData()
     const interval = setInterval(fetchData, 3000)
     return () => clearInterval(interval)
   }, [cafeId])
 
   async function fetchData() {
+    if (!cafeId) return
     try {
       const [tablesRes, ordersRes] = await Promise.all([
         fetch(`/api/tables?cafeId=${cafeId}`),
@@ -28,7 +34,7 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
 
       if (tablesRes.ok) {
         const tablesData = await tablesRes.json()
-        setTables(tablesData)
+        setTables(tablesData.sort((a: Table, b: Table) => a.number - b.number))
       }
 
       if (ordersRes.ok) {
@@ -52,6 +58,7 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
 
       if (response.ok) {
         fetchData()
+        setSelectedTable(null)
       }
     } catch (error) {
       console.error("Error updating table status:", error)
@@ -71,14 +78,14 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
   function getStatusColor(status: TableStatus) {
     switch (status) {
       case "occupied":
-        return "bg-red-500 hover:bg-red-600"
+        return "bg-orange-500"
       case "cleaning":
-        return "bg-yellow-500 hover:bg-yellow-600"
+        return "bg-yellow-500"
       case "reserved":
-        return "bg-blue-500 hover:bg-blue-600"
+        return "bg-blue-500"
       case "empty":
       default:
-        return "bg-green-500 hover:bg-green-600"
+        return "bg-gray-300 dark:bg-gray-600"
     }
   }
 
@@ -92,7 +99,21 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
         return "Reserved"
       case "empty":
       default:
-        return "Empty"
+        return "Ready to Use"
+    }
+  }
+
+  function getNextStatusOptions(currentStatus: TableStatus): TableStatus[] {
+    switch (currentStatus) {
+      case "occupied":
+        return ["cleaning", "empty"]
+      case "cleaning":
+        return ["empty", "occupied"]
+      case "reserved":
+        return ["empty", "occupied"]
+      case "empty":
+      default:
+        return ["occupied", "reserved", "cleaning"]
     }
   }
 
@@ -107,19 +128,23 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Table Status</h2>
-        <div className="flex gap-2 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded bg-green-500"></div>
-            <span>Empty</span>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Live Table Status (Visual)</h2>
+        <div className="flex flex-wrap gap-3 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="h-4 w-4 rounded bg-gray-300 dark:bg-gray-600"></div>
+            <span className="text-gray-700 dark:text-gray-300">Ready to Use</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded bg-red-500"></div>
-            <span>Occupied</span>
+          <div className="flex items-center gap-1.5">
+            <div className="h-4 w-4 rounded bg-orange-500"></div>
+            <span className="text-gray-700 dark:text-gray-300">Occupied</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded bg-yellow-500"></div>
-            <span>Cleaning</span>
+          <div className="flex items-center gap-1.5">
+            <div className="h-4 w-4 rounded bg-yellow-500"></div>
+            <span className="text-gray-700 dark:text-gray-300">Cleaning</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-4 w-4 rounded bg-blue-500"></div>
+            <span className="text-gray-700 dark:text-gray-300">Reserved</span>
           </div>
         </div>
       </div>
@@ -130,86 +155,63 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
           const tableOrder = orders.find(
             (o) => o.tableId === table.id && o.status !== "completed" && o.status !== "cancelled"
           )
+          const isSelected = selectedTable === table.id
+          const nextOptions = getNextStatusOptions(status)
 
           return (
-            <div
-              key={table.id}
-              className={`relative rounded-lg border-2 p-4 transition-all ${
-                status === "occupied"
-                  ? "border-red-500 bg-red-50 dark:bg-red-950"
-                  : status === "cleaning"
-                  ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-950"
-                  : "border-green-500 bg-green-50 dark:bg-green-950"
-              }`}
-            >
-              <div className="mb-2 text-center">
-                <h3 className="text-lg font-bold">Table {table.number}</h3>
-                {table.capacity && (
-                  <p className="text-xs text-muted-foreground">
-                    Capacity: {table.capacity}
-                  </p>
-                )}
-              </div>
+            <div key={table.id} className="relative">
+              <button
+                onClick={() => setSelectedTable(isSelected ? null : table.id)}
+                className={`w-full rounded-lg border-2 p-6 transition-all ${
+                  getStatusColor(status)
+                } ${
+                  isSelected
+                    ? "ring-4 ring-blue-400 ring-offset-2 dark:ring-offset-gray-900"
+                    : "hover:opacity-90 hover:scale-105"
+                } ${status === "occupied" ? "border-orange-600" : status === "cleaning" ? "border-yellow-600" : status === "reserved" ? "border-blue-600" : "border-gray-400 dark:border-gray-500"}`}
+              >
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-white drop-shadow-lg">
+                    {table.number}
+                  </div>
+                  {tableOrder && (
+                    <div className="mt-2 text-xs font-semibold text-white/90">
+                      Order Active
+                    </div>
+                  )}
+                </div>
+              </button>
 
-              <div className="mb-2 text-center">
-                <span
-                  className={`inline-block rounded-full px-2 py-1 text-xs font-medium text-white ${getStatusColor(status)}`}
-                >
-                  {getStatusLabel(status)}
-                </span>
-              </div>
-
-              {tableOrder && (
-                <div className="mb-2 rounded bg-white/50 p-2 text-xs dark:bg-black/20">
-                  <p className="font-medium">Order #{tableOrder.id.slice(-6)}</p>
-                  <p className="text-muted-foreground">
-                    ${tableOrder.total.toFixed(2)} • {tableOrder.status}
-                  </p>
+              {isSelected && (
+                <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-lg border bg-background p-3 shadow-lg">
+                  <div className="mb-2 text-center">
+                    <p className="text-sm font-semibold">Table {table.number}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Current: {getStatusLabel(status)}
+                    </p>
+                    {table.capacity && (
+                      <p className="text-xs text-muted-foreground">
+                        Capacity: {table.capacity}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">Change Status:</p>
+                    {nextOptions.map((nextStatus) => (
+                      <Button
+                        key={nextStatus}
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-xs"
+                        onClick={() => updateTableStatus(table.id, nextStatus)}
+                      >
+                        Mark as {getStatusLabel(nextStatus)}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               )}
-
-              <div className="space-y-1">
-                {status === "occupied" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full text-xs"
-                    onClick={() => updateTableStatus(table.id, "cleaning")}
-                  >
-                    Mark Cleaning
-                  </Button>
-                )}
-                {status === "cleaning" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full text-xs"
-                    onClick={() => updateTableStatus(table.id, "empty")}
-                  >
-                    Mark Empty
-                  </Button>
-                )}
-                {status === "empty" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full text-xs"
-                    onClick={() => updateTableStatus(table.id, "reserved")}
-                  >
-                    Mark Reserved
-                  </Button>
-                )}
-                {status === "reserved" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full text-xs"
-                    onClick={() => updateTableStatus(table.id, "empty")}
-                  >
-                    Mark Empty
-                  </Button>
-                )}
-              </div>
             </div>
           )
         })}
