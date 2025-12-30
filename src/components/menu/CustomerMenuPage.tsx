@@ -11,6 +11,7 @@ import { OrderStatusBar } from "./OrderStatusBar"
 import { ReviewModal } from "./ReviewModal"
 import { CallEmployeeButton } from "./CallEmployeeButton"
 import { CustomerDetailsForm } from "./CustomerDetailsForm"
+import { ThemeToggle } from "../common"
 
 export function CustomerMenuPage() {
   const params = useParams()
@@ -289,6 +290,7 @@ export function CustomerMenuPage() {
             <Button onClick={() => setShowCart(!showCart)} variant="outline" size="sm">
               Cart ({cart.length}) - ${total.toFixed(2)}
             </Button>
+            <ThemeToggle/>
           </div>
         </div>
       </header>
