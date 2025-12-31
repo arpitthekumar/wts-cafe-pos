@@ -72,6 +72,9 @@ export const createTables = (db: any) => {
       customerName TEXT,
       customerEmail TEXT,
       notes TEXT,
+      paymentMethod TEXT,
+      paidAt TEXT,
+      billNumber TEXT,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL,
       FOREIGN KEY (cafeId) REFERENCES cafes(id),
@@ -136,6 +139,23 @@ export const createTables = (db: any) => {
       createdAt TEXT NOT NULL,
       respondedAt TEXT,
       respondedBy TEXT,
+      FOREIGN KEY (cafeId) REFERENCES cafes(id),
+      FOREIGN KEY (tableId) REFERENCES tables(id)
+    )
+  `)
+
+  // Table Sessions (tracks active customers at tables)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS table_sessions (
+      id TEXT PRIMARY KEY,
+      cafeId TEXT NOT NULL,
+      tableId TEXT NOT NULL,
+      tableNumber INTEGER NOT NULL,
+      customerName TEXT NOT NULL,
+      customerEmail TEXT NOT NULL,
+      startedAt TEXT NOT NULL,
+      endedAt TEXT,
+      isActive INTEGER DEFAULT 1,
       FOREIGN KEY (cafeId) REFERENCES cafes(id),
       FOREIGN KEY (tableId) REFERENCES tables(id)
     )

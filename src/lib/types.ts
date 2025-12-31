@@ -1,6 +1,8 @@
-export type OrderStatus = "pending" | "preparing" | "ready" | "completed" | "cancelled"
+export type OrderStatus = "pending" | "preparing" | "ready" | "served" | "completed" | "cancelled"
 export type UserRole = "super-admin" | "admin" | "employee"
 export type HelpRequestStatus = "pending" | "responded" | "resolved"
+
+export type Currency = "USD" | "INR"
 
 export interface Cafe {
   id: string
@@ -9,12 +11,13 @@ export interface Cafe {
   phone?: string
   email?: string
   isActive: boolean
+  currency?: Currency // Currency preference (USD or INR)
   createdAt: string
   updatedAt: string
   adminId?: string // ID of the admin managing this café
 }
 
-export type TableStatus = "empty" | "occupied" | "cleaning" | "reserved"
+export type TableStatus = "empty" | "occupied" | "served" | "cleaning" | "reserved"
 
 export interface Table {
   id: string
@@ -49,6 +52,8 @@ export interface OrderItem {
   notes?: string
 }
 
+export type PaymentMethod = "cash" | "card" | "upi" | "online" | "other"
+
 export interface Order {
   id: string
   cafeId: string
@@ -62,6 +67,9 @@ export interface Order {
   customerName?: string
   customerEmail?: string
   notes?: string
+  paymentMethod?: PaymentMethod
+  paidAt?: string
+  billNumber?: string
 }
 
 export interface Category {
@@ -104,5 +112,17 @@ export interface HelpRequest {
   createdAt: string
   respondedAt?: string
   respondedBy?: string
+}
+
+export interface TableSession {
+  id: string
+  cafeId: string
+  tableId: string
+  tableNumber: number
+  customerName: string
+  customerEmail: string
+  startedAt: string
+  endedAt?: string
+  isActive: boolean
 }
 

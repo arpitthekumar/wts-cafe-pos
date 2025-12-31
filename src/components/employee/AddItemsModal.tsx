@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { MenuItem, Category, OrderItem } from "@/lib/types"
+import { MenuItem, Category, OrderItem, Order } from "@/lib/types"
 import { Button, Input } from "@/components/ui"
+import { useCafeCurrency } from "@/hooks/useCafeCurrency"
+import { formatCurrency } from "@/lib/utils/currency"
 
 interface AddItemsModalProps {
   orderId: string
@@ -16,11 +18,28 @@ export function AddItemsModal({ orderId, cafeId, onClose, onAddItems }: AddItems
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [selectedItems, setSelectedItems] = useState<Map<string, { item: MenuItem; quantity: number; notes: string }>>(new Map())
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null)
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
+  const currency = useCafeCurrency(cafeId)
 
   useEffect(() => {
     fetchMenu()
-  }, [cafeId])
+    fetchOrder()
+  }, [cafeId, orderId])
+
+  async function fetchOrder() {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`)
+      if (response.ok) {
+        const order = await response.json()
+        setCurrentOrder(order)
+        setOrderItems(order.items || [])
+      }
+    } catch (error) {
+      console.error("Error fetching order:", error)
+    }
+  }
 
   async function fetchMenu() {
     try {
@@ -85,7 +104,7 @@ export function AddItemsModal({ orderId, cafeId, onClose, onAddItems }: AddItems
     }
   }
 
-  function handleAddItems() {
+  async function handleAddItems() {
     const items: OrderItem[] = Array.from(selectedItems.values()).map(({ item, quantity, notes }) => ({
       id: `${item.id}-${Date.now()}`,
       menuItemId: item.id,
@@ -95,7 +114,9 @@ export function AddItemsModal({ orderId, cafeId, onClose, onAddItems }: AddItems
       notes: notes || undefined,
     }))
     onAddItems(items)
-    onClose()
+    // Refresh order after adding items
+    await fetchOrder()
+    setSelectedItems(new Map())
   }
 
   const filteredItems = selectedCategory === "all"
@@ -111,7 +132,7 @@ export function AddItemsModal({ orderId, cafeId, onClose, onAddItems }: AddItems
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-4xl max-h-[90vh] rounded-lg border bg-background shadow-lg flex flex-col">
         <div className="flex items-center justify-between border-b p-4">
-          <h2 className="text-xl font-bold">Add Items to Order</h2>
+          <h2 className="text-xl font-bold">Edit Order</h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             ✕
           </Button>
@@ -160,7 +181,7 @@ export function AddItemsModal({ orderId, cafeId, onClose, onAddItems }: AddItems
                         <p className="text-sm text-muted-foreground">{item.description}</p>
                       </div>
                       <div className="ml-2 text-right">
-                        <p className="font-bold">${item.price.toFixed(2)}</p>
+                        <p className="font-bold">{formatCurrency(item.price, currency)}</p>
                         {selectedItems.has(item.id) && (
                           <p className="text-xs text-muted-foreground">
                             {selectedItems.get(item.id)!.quantity}x selected
@@ -181,9 +202,57 @@ export function AddItemsModal({ orderId, cafeId, onClose, onAddItems }: AddItems
             )}
           </div>
 
-          {/* Selected Items Side */}
+          {/* Current & Selected Items Side */}
           <div className="w-80 overflow-y-auto p-4 bg-muted/50">
-            <h3 className="mb-4 font-semibold">Selected Items</h3>
+            {/* Current Order Items */}
+            {orderItems.length > 0 && (
+              <div className="mb-4">
+                <h3 className="mb-2 font-semibold">Current Order Items</h3>
+                <div className="space-y-2">
+                  {orderItems.map((item) => (
+                    <div key={item.id} className="rounded-lg border bg-background p-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">{item.quantity}x {item.menuItemName}</span>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`/api/orders/${orderId}/items/${item.id}`, {
+                                method: "DELETE",
+                              })
+                              if (response.ok) {
+                                await fetchOrder()
+                              }
+                            } catch (error) {
+                              console.error("Error removing item:", error)
+                            }
+                          }}
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          {formatCurrency(item.price * item.quantity, currency)}
+                        </span>
+                        {item.notes && (
+                          <span className="text-muted-foreground">• {item.notes}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {currentOrder && (
+                  <div className="mt-2 text-sm font-semibold">
+                    Current Total: {formatCurrency(currentOrder.total, currency)}
+                  </div>
+                )}
+                <div className="border-t my-3"></div>
+              </div>
+            )}
+
+            <h3 className="mb-4 font-semibold">Add New Items</h3>
             {selectedItems.size === 0 ? (
               <p className="text-sm text-muted-foreground">No items selected</p>
             ) : (
@@ -192,7 +261,7 @@ export function AddItemsModal({ orderId, cafeId, onClose, onAddItems }: AddItems
                   <div key={item.id} className="rounded-lg border bg-background p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="font-medium">{item.name}</span>
-                      <span className="text-sm font-bold">${(item.price * quantity).toFixed(2)}</span>
+                      <span className="text-sm font-bold">{formatCurrency(item.price * quantity, currency)}</span>
                     </div>
                     <div className="mb-2 flex items-center gap-2">
                       <Button
@@ -222,7 +291,7 @@ export function AddItemsModal({ orderId, cafeId, onClose, onAddItems }: AddItems
                 <div className="border-t pt-3">
                   <div className="mb-3 flex items-center justify-between">
                     <span className="font-semibold">Total</span>
-                    <span className="text-lg font-bold">${total.toFixed(2)}</span>
+                    <span className="text-lg font-bold">{formatCurrency(total, currency)}</span>
                   </div>
                   <Button
                     className="w-full"

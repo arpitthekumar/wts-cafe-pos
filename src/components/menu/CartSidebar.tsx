@@ -1,7 +1,8 @@
 "use client"
 
-import { OrderItem } from "@/lib/types"
+import { OrderItem, Currency } from "@/lib/types"
 import { Button } from "@/components/ui"
+import { formatCurrency } from "@/lib/utils/currency"
 
 interface CartSidebarProps {
   isOpen: boolean
@@ -12,6 +13,7 @@ interface CartSidebarProps {
   onRemoveItem: (itemId: string) => void
   onSubmitOrder: () => void
   isSubmitting: boolean
+  currency?: Currency
 }
 
 export function CartSidebar({
@@ -23,6 +25,7 @@ export function CartSidebar({
   onRemoveItem,
   onSubmitOrder,
   isSubmitting,
+  currency = "USD",
 }: CartSidebarProps) {
   if (!isOpen) return null
 
@@ -54,7 +57,7 @@ export function CartSidebar({
                     <div className="flex-1">
                       <p className="font-medium">{item.menuItemName}</p>
                       <p className="text-sm text-muted-foreground">
-                        ${item.price.toFixed(2)} each
+                        {formatCurrency(item.price, currency)} each
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -92,7 +95,7 @@ export function CartSidebar({
             <div className="border-t p-4">
               <div className="mb-4 flex items-center justify-between text-lg font-bold">
                 <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatCurrency(total, currency)}</span>
               </div>
               <Button
                 className="w-full"

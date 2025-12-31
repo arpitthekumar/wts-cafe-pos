@@ -1,7 +1,9 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { HelpRequest } from "@/lib/types"
 import { Button } from "@/components/ui"
+import { sounds } from "@/lib/utils/sound"
 
 interface HelpRequestsPanelProps {
   requests: HelpRequest[]
@@ -9,6 +11,20 @@ interface HelpRequestsPanelProps {
 }
 
 export function HelpRequestsPanel({ requests, onRespond }: HelpRequestsPanelProps) {
+  const previousCount = useRef(requests.length)
+
+  useEffect(() => {
+    // Play sound when new help request arrives (always play, even if page is visible)
+    if (requests.length > previousCount.current) {
+      sounds.helpRequest()
+      // Also play again after 2 seconds to grab attention
+      setTimeout(() => {
+        sounds.helpRequest()
+      }, 2000)
+    }
+    previousCount.current = requests.length
+  }, [requests.length])
+
   return (
     <div className="mb-6 rounded-lg border-2 border-yellow-500 bg-yellow-50 p-4 dark:bg-yellow-950">
       <div className="mb-2 flex items-center justify-between">

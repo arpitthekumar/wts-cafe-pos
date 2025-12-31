@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Table, TableStatus, Order } from "@/lib/types"
+import { Table, TableStatus, Order, TableSession } from "@/lib/types"
 import { Button } from "@/components/ui"
+import { TableBillingModal } from "./TableBillingModal"
+import { cafes } from "@/lib/db/queries"
 
 interface TablesDashboardProps {
   cafeId: string
@@ -11,8 +13,12 @@ interface TablesDashboardProps {
 export function TablesDashboard({ cafeId }: TablesDashboardProps) {
   const [tables, setTables] = useState<Table[]>([])
   const [orders, setOrders] = useState<Order[]>([])
+  const [sessions, setSessions] = useState<TableSession[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTable, setSelectedTable] = useState<string | null>(null)
+  const [showBillingModal, setShowBillingModal] = useState(false)
+  const [billingTable, setBillingTable] = useState<Table | null>(null)
+  const [cafeName, setCafeName] = useState<string>("")
 
   useEffect(() => {
     if (!cafeId) {
@@ -27,9 +33,11 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
   async function fetchData() {
     if (!cafeId) return
     try {
-      const [tablesRes, ordersRes] = await Promise.all([
+      const [tablesRes, ordersRes, sessionsRes, cafeRes] = await Promise.all([
         fetch(`/api/tables?cafeId=${cafeId}`),
-        fetch(`/api/orders?cafeId=${cafeId}&status=pending,preparing,ready`),
+        fetch(`/api/orders?cafeId=${cafeId}&status=pending,preparing,ready,served`),
+        fetch(`/api/table-sessions?cafeId=${cafeId}`),
+        fetch(`/api/cafes/${cafeId}`),
       ])
 
       if (tablesRes.ok) {
@@ -40,6 +48,16 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json()
         setOrders(ordersData)
+      }
+
+      if (sessionsRes.ok) {
+        const sessionsData = await sessionsRes.json()
+        setSessions(sessionsData)
+      }
+
+      if (cafeRes.ok) {
+        const cafeData = await cafeRes.json()
+        setCafeName(cafeData.name || "")
       }
     } catch (error) {
       console.error("Error fetching data:", error)
@@ -57,28 +75,58 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
       })
 
       if (response.ok) {
+        // If changing to cleaning or empty, end the table session
+        if (status === "cleaning" || status === "empty") {
+          await fetch(`/api/table-sessions?tableId=${tableId}`, {
+            method: "DELETE",
+          })
+        }
         fetchData()
         setSelectedTable(null)
+      } else {
+        const errorData = await response.json()
+        console.error("Error updating table status:", errorData)
+        alert(errorData.error || "Failed to update table status")
       }
     } catch (error) {
       console.error("Error updating table status:", error)
+      alert("Failed to update table status. Please try again.")
     }
   }
 
   function getTableStatus(table: Table): TableStatus {
+    // Check if there's an active session - table should show as "cleaning" if customer is present
+    const hasActiveSession = sessions.some(s => s.tableId === table.id && s.isActive)
+    
+    // Check if table has served order
+    const hasServedOrder = orders.some(
+      (o) => o.tableId === table.id && o.status === "served"
+    )
+    if (hasServedOrder) return "served"
+    
     // Check if table has active order
     const hasActiveOrder = orders.some(
-      (o) => o.tableId === table.id && o.status !== "completed" && o.status !== "cancelled"
+      (o) => o.tableId === table.id && o.status !== "completed" && o.status !== "cancelled" && o.status !== "served"
     )
     
     if (hasActiveOrder) return "occupied"
+    
+    // If there's an active session but no orders, show as cleaning (customer is at table)
+    if (hasActiveSession) return "cleaning"
+    
     return table.status || "empty"
+  }
+
+  function getTableCustomer(table: Table): TableSession | undefined {
+    return sessions.find(s => s.tableId === table.id && s.isActive)
   }
 
   function getStatusColor(status: TableStatus) {
     switch (status) {
       case "occupied":
         return "bg-orange-500"
+      case "served":
+        return "bg-purple-500"
       case "cleaning":
         return "bg-yellow-500"
       case "reserved":
@@ -93,6 +141,8 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
     switch (status) {
       case "occupied":
         return "Occupied"
+      case "served":
+        return "Served"
       case "cleaning":
         return "Cleaning"
       case "reserved":
@@ -106,9 +156,11 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
   function getNextStatusOptions(currentStatus: TableStatus): TableStatus[] {
     switch (currentStatus) {
       case "occupied":
-        return ["cleaning", "empty"]
+        return ["served", "cleaning", "empty"]
+      case "served":
+        return ["cleaning", "empty", "occupied"]
       case "cleaning":
-        return ["empty", "occupied"]
+        return ["empty", "occupied", "reserved"]
       case "reserved":
         return ["empty", "occupied"]
       case "empty":
@@ -146,6 +198,10 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
             <div className="h-4 w-4 rounded bg-blue-500"></div>
             <span className="text-gray-700 dark:text-gray-300">Reserved</span>
           </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-4 w-4 rounded bg-purple-500"></div>
+            <span className="text-gray-700 dark:text-gray-300">Served</span>
+          </div>
         </div>
       </div>
 
@@ -155,6 +211,7 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
           const tableOrder = orders.find(
             (o) => o.tableId === table.id && o.status !== "completed" && o.status !== "cancelled"
           )
+          const tableCustomer = getTableCustomer(table)
           const isSelected = selectedTable === table.id
           const nextOptions = getNextStatusOptions(status)
 
@@ -168,15 +225,20 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
                   isSelected
                     ? "ring-4 ring-blue-400 ring-offset-2 dark:ring-offset-gray-900"
                     : "hover:opacity-90 hover:scale-105"
-                } ${status === "occupied" ? "border-orange-600" : status === "cleaning" ? "border-yellow-600" : status === "reserved" ? "border-blue-600" : "border-gray-400 dark:border-gray-500"}`}
+                } ${status === "occupied" ? "border-orange-600" : status === "served" ? "border-purple-600" : status === "cleaning" ? "border-yellow-600" : status === "reserved" ? "border-blue-600" : "border-gray-400 dark:border-gray-500"}`}
               >
                 <div className="text-center">
                   <div className="text-4xl font-bold text-white drop-shadow-lg">
                     {table.number}
                   </div>
+                  {tableCustomer && (
+                    <div className="mt-1 text-xs font-semibold text-white/95">
+                      {tableCustomer.customerName}
+                    </div>
+                  )}
                   {tableOrder && (
-                    <div className="mt-2 text-xs font-semibold text-white/90">
-                      Order Active
+                    <div className="mt-1 text-xs font-semibold text-white/90">
+                      Order {tableOrder.status}
                     </div>
                   )}
                 </div>
@@ -186,6 +248,11 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
                 <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-lg border bg-background p-3 shadow-lg">
                   <div className="mb-2 text-center">
                     <p className="text-sm font-semibold">Table {table.number}</p>
+                    {tableCustomer && (
+                      <p className="text-xs font-medium text-foreground">
+                        Customer: {tableCustomer.customerName}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       Current: {getStatusLabel(status)}
                     </p>
@@ -204,11 +271,79 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
                         size="sm"
                         variant="outline"
                         className="w-full text-xs"
-                        onClick={() => updateTableStatus(table.id, nextStatus)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          updateTableStatus(table.id, nextStatus)
+                        }}
                       >
                         Mark as {getStatusLabel(nextStatus)}
                       </Button>
                     ))}
+                    {tableCustomer && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="w-full text-xs mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setBillingTable(table)
+                            setShowBillingModal(true)
+                          }}
+                        >
+                          💰 Bill Table
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="w-full text-xs mt-1"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            updateTableStatus(table.id, "cleaning")
+                          }}
+                        >
+                          End Session & Mark Cleaning
+                        </Button>
+                      </>
+                    )}
+                    {!tableCustomer && (status === "served" || status === "occupied") && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="w-full text-xs mt-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setBillingTable(table)
+                          setShowBillingModal(true)
+                        }}
+                      >
+                        💰 Bill Table
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs mt-1"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        if (confirm(`Reset Table ${table.number} to empty? This will clear all sessions.`)) {
+                          try {
+                            await fetch("/api/tables/reset", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ tableId: table.id }),
+                            })
+                            fetchData()
+                            setSelectedTable(null)
+                          } catch (error) {
+                            console.error("Error resetting table:", error)
+                            alert("Failed to reset table")
+                          }
+                        }
+                      }}
+                    >
+                      🔄 Reset Table
+                    </Button>
                   </div>
                 </div>
               )}
@@ -216,6 +351,23 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
           )
         })}
       </div>
+
+      {showBillingModal && billingTable && (
+        <TableBillingModal
+          table={billingTable}
+          cafeId={cafeId}
+          cafeName={cafeName}
+          onClose={() => {
+            setShowBillingModal(false)
+            setBillingTable(null)
+          }}
+          onBillingComplete={() => {
+            fetchData()
+            setShowBillingModal(false)
+            setBillingTable(null)
+          }}
+        />
+      )}
     </div>
   )
 }
