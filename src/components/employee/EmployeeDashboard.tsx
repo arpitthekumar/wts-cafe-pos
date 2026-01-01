@@ -23,7 +23,7 @@ export function EmployeeDashboard() {
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false)
   const previousReadyOrders = useRef<Set<string>>(new Set())
   const cafeId = (session?.user as any)?.cafeId
-
+  
   useEffect(() => {
     if (!session) {
       setLoading(false)
