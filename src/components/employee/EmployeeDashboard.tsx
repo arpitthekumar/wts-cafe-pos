@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { Order, HelpRequest, OrderStatus } from "@/lib/types"
 import { Button } from "@/components/ui"
@@ -9,7 +9,9 @@ import { OrderCard } from "./OrderCard"
 import { HelpRequestsPanel } from "./HelpRequestsPanel"
 import { AddItemsModal } from "./AddItemsModal"
 import { TablesDashboard } from "./TablesDashboard"
+import { CreateOrderModal } from "./CreateOrderModal"
 import { OrderItem } from "@/lib/types"
+import { sounds } from "@/lib/utils/sound"
 
 export function EmployeeDashboard() {
   const { data: session } = useSession()
@@ -18,8 +20,10 @@ export function EmployeeDashboard() {
   const [loading, setLoading] = useState(true)
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [showAddItemsModal, setShowAddItemsModal] = useState(false)
+  const [showCreateOrderModal, setShowCreateOrderModal] = useState(false)
+  const previousReadyOrders = useRef<Set<string>>(new Set())
   const cafeId = (session?.user as any)?.cafeId
-
+  
   useEffect(() => {
     if (!session) {
       setLoading(false)
@@ -49,6 +53,18 @@ export function EmployeeDashboard() {
           (o: Order) => o.status !== "completed" && o.status !== "cancelled"
         )
         setOrders(activeOrders)
+
+        // Check for new ready orders and play sound
+        const readyOrders = activeOrders.filter((o: Order) => o.status === "ready")
+        const currentReadyIds = new Set<string>(readyOrders.map((o: Order) => o.id))
+        const newReadyOrders = readyOrders.filter(
+          (o: Order) => !previousReadyOrders.current.has(o.id)
+        )
+        
+        if (newReadyOrders.length > 0) {
+          sounds.orderReady()
+        }
+        previousReadyOrders.current = currentReadyIds
       }
 
       if (helpRes.ok) {
@@ -71,6 +87,18 @@ export function EmployeeDashboard() {
       })
 
       if (response.ok) {
+        // If marking as served, update table status to served
+        if (newStatus === "served") {
+          const order = orders.find(o => o.id === orderId)
+          if (order) {
+            await fetch(`/api/tables/${order.tableId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: "served" }),
+            })
+          }
+        }
+        
         fetchData(cafeId || "cafe-1")
       }
     } catch (error) {
@@ -135,6 +163,7 @@ export function EmployeeDashboard() {
     pending: orders.filter((o) => o.status === "pending"),
     preparing: orders.filter((o) => o.status === "preparing"),
     ready: orders.filter((o) => o.status === "ready"),
+    served: orders.filter((o) => o.status === "served"),
   }
 
   if (loading) {
@@ -161,11 +190,40 @@ export function EmployeeDashboard() {
           />
         )}
 
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold">Tables</h2>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={async () => {
+                if (confirm("Reset all tables to 'Ready to Use'? This will clear all sessions.")) {
+                  try {
+                    await fetch("/api/tables/reset-all", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ cafeId: cafeId || "cafe-1" }),
+                    })
+                    alert("All tables have been reset to 'Ready to Use'")
+                  } catch (error) {
+                    console.error("Error resetting tables:", error)
+                    alert("Failed to reset tables")
+                  }
+                }
+              }}
+            >
+              🔄 Reset All Tables
+            </Button>
+            <Button onClick={() => setShowCreateOrderModal(true)}>
+              + Create Order
+            </Button>
+          </div>
+        </div>
+
         <div className="mb-6">
           <TablesDashboard cafeId={cafeId || "cafe-1"} />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <OrderColumn
             title="New Orders"
             orders={ordersByStatus.pending}
@@ -188,6 +246,14 @@ export function EmployeeDashboard() {
             title="Ready"
             orders={ordersByStatus.ready}
             onStatusUpdate={updateOrderStatus}
+            nextStatus="served"
+            nextStatusLabel="Mark as Served"
+            onAddItems={handleAddItems}
+          />
+          <OrderColumn
+            title="Served"
+            orders={ordersByStatus.served || []}
+            onStatusUpdate={updateOrderStatus}
             nextStatus="completed"
             nextStatusLabel="Complete Order"
             onAddItems={handleAddItems}
@@ -205,6 +271,17 @@ export function EmployeeDashboard() {
             onAddItems={handleAddItemsToOrder}
           />
         )}
+
+        {showCreateOrderModal && (
+          <CreateOrderModal
+            cafeId={cafeId || "cafe-1"}
+            onClose={() => setShowCreateOrderModal(false)}
+            onOrderCreated={() => {
+              setShowCreateOrderModal(false)
+              fetchData(cafeId || "cafe-1")
+            }}
+          />
+        )}
       </div>
     </div>
   )
@@ -219,6 +296,7 @@ interface OrderColumnProps {
   onAccept?: () => void
   onAddItems?: (orderId: string) => void
   showAccept?: boolean
+  disabled?: boolean
 }
 
 function OrderColumn({ 
@@ -230,6 +308,7 @@ function OrderColumn({
   onAccept,
   onAddItems,
   showAccept,
+  disabled,
 }: OrderColumnProps) {
   return (
     <div className="rounded-lg border bg-card p-4">
@@ -248,6 +327,7 @@ function OrderColumn({
               onAccept={onAccept}
               onAddItems={onAddItems}
               showAccept={showAccept}
+              disabled={disabled}
             />
           ))
         )}

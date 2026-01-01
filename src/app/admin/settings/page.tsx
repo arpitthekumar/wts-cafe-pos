@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { Cafe } from "@/lib/types"
+import { Cafe, Currency } from "@/lib/types"
 import { Button, Input, Label } from "@/components/ui"
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import Link from "next/link"
@@ -98,6 +98,7 @@ function SettingsForm({
     phone: cafe.phone || "",
     email: cafe.email || "",
     isActive: cafe.isActive,
+    currency: (cafe.currency || "USD") as Currency,
   })
 
   return (
@@ -152,6 +153,19 @@ function SettingsForm({
             />
             <Label htmlFor="isActive">Café is Active</Label>
           </div>
+
+          <div>
+            <Label htmlFor="currency">Currency</Label>
+            <select
+              id="currency"
+              value={formData.currency}
+              onChange={(e) => setFormData({ ...formData, currency: e.target.value as Currency })}
+              className="w-full rounded-md border border-input bg-background px-3 py-2"
+            >
+              <option value="USD">USD ($)</option>
+              <option value="INR">INR (₹)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -166,6 +180,7 @@ function SettingsForm({
     </div>
   )
 }
+
 
 
 

@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Order, OrderStatus } from "@/lib/types"
 import { Button } from "@/components/ui"
+import { useCafeCurrency } from "@/hooks/useCafeCurrency"
+import { formatCurrency } from "@/lib/utils/currency"
 
 interface OrderCardProps {
   order: Order
@@ -12,6 +14,7 @@ interface OrderCardProps {
   onAccept?: () => void
   onAddItems?: (orderId: string) => void
   showAccept?: boolean
+  disabled?: boolean
 }
 
 export function OrderCard({ 
@@ -22,8 +25,10 @@ export function OrderCard({
   onAccept,
   onAddItems,
   showAccept = false,
+  disabled = false,
 }: OrderCardProps) {
   const [accepted, setAccepted] = useState(false)
+  const currency = useCafeCurrency(order.cafeId)
 
   function handleAccept() {
     setAccepted(true)
@@ -36,7 +41,7 @@ export function OrderCard({
     <div className={`rounded border bg-background p-3 ${!accepted && showAccept ? "border-yellow-400 bg-yellow-50 dark:bg-yellow-950" : ""}`}>
       <div className="mb-2 flex items-center justify-between">
         <span className="font-semibold">Table {order.tableNumber}</span>
-        <span className="text-sm font-medium">${order.total.toFixed(2)}</span>
+        <span className="text-sm font-medium">{formatCurrency(order.total, currency)}</span>
       </div>
       
       {order.notes && (
@@ -53,7 +58,7 @@ export function OrderCard({
               {item.quantity}x {item.menuItemName}
               {item.notes && <span className="text-yellow-600"> • {item.notes}</span>}
             </span>
-            <span>${(item.price * item.quantity).toFixed(2)}</span>
+            <span>{formatCurrency(item.price * item.quantity, currency)}</span>
           </div>
         ))}
       </div>
@@ -85,7 +90,7 @@ export function OrderCard({
             className="w-full"
             onClick={() => onAddItems(order.id)}
           >
-            + Add Items
+            ✏️ Edit Order
           </Button>
         )}
 
@@ -93,6 +98,7 @@ export function OrderCard({
           size="sm"
           className="w-full"
           onClick={() => onStatusUpdate(nextStatus)}
+          disabled={disabled && !accepted}
         >
           {nextStatusLabel}
         </Button>

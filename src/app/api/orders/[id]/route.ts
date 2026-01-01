@@ -34,25 +34,31 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { status } = body
+    const { status, paymentMethod, paidAt, billNumber } = body
 
-    if (!status) {
+    const updates: any = {}
+    if (status) {
+      const validStatuses: OrderStatus[] = ["pending", "preparing", "ready", "served", "completed", "cancelled"]
+      if (!validStatuses.includes(status)) {
+        return NextResponse.json(
+          { error: "Invalid status" },
+          { status: 400 }
+        )
+      }
+      updates.status = status
+    }
+    if (paymentMethod) updates.paymentMethod = paymentMethod
+    if (paidAt) updates.paidAt = paidAt
+    if (billNumber) updates.billNumber = billNumber
+
+    if (Object.keys(updates).length === 0) {
       return NextResponse.json(
-        { error: "Status is required" },
+        { error: "At least one field is required" },
         { status: 400 }
       )
     }
 
-    const validStatuses: OrderStatus[] = ["pending", "preparing", "ready", "completed", "cancelled"]
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: "Invalid status" },
-        { status: 400 }
-      )
-    }
-
-
-    const updatedOrder = orders.update(id, { status })
+    const updatedOrder = orders.update(id, updates)
     if (!updatedOrder) {
       return NextResponse.json(
         { error: "Order not found" },

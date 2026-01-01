@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { tables, cafes } from "@/lib/db/queries"
+import { tables, cafes, tableSessions } from "@/lib/db/queries"
 import { slugify } from "@/lib/utils/slug"
 
 export async function PUT(
@@ -26,6 +26,11 @@ export async function PUT(
         { error: "Table not found" },
         { status: 404 }
       )
+    }
+
+    // If status is being changed to something other than "occupied" or "served", end the active session
+    if (body.status && body.status !== "occupied" && body.status !== "served") {
+      tableSessions.endSession(id)
     }
 
     return NextResponse.json(updated)

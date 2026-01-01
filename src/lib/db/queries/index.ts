@@ -6,6 +6,8 @@ export { orders, orderItems } from "./orders"
 export { employees } from "./employees"
 export { reviews } from "./reviews"
 export { helpRequests } from "./help-requests"
+export { tableSessions } from "./table-sessions"
+
 
 
 

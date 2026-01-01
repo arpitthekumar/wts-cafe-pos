@@ -33,13 +33,65 @@ function runMigrations(db: any) {
       db.prepare("UPDATE tables SET status = 'empty' WHERE status IS NULL").run()
     }
 
-    // Check if customerEmail column exists in orders table
+    // Check if customerEmail and payment columns exist in orders table
     const ordersInfo = db.prepare("PRAGMA table_info(orders)").all() as Array<{ name: string }>
     const hasCustomerEmailColumn = ordersInfo.some((col: { name: string }) => col.name === "customerEmail")
+    const hasPaymentMethod = ordersInfo.some((col: { name: string }) => col.name === "paymentMethod")
+    const hasPaidAt = ordersInfo.some((col: { name: string }) => col.name === "paidAt")
+    const hasBillNumber = ordersInfo.some((col: { name: string }) => col.name === "billNumber")
     
     if (!hasCustomerEmailColumn) {
       console.log("Adding customerEmail column to orders table...")
       db.prepare("ALTER TABLE orders ADD COLUMN customerEmail TEXT").run()
+    }
+
+    // Check if table_sessions table exists
+    const tableExists = db.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='table_sessions'
+    `).get()
+    
+    if (!tableExists) {
+      console.log("Creating table_sessions table...")
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS table_sessions (
+          id TEXT PRIMARY KEY,
+          cafeId TEXT NOT NULL,
+          tableId TEXT NOT NULL,
+          tableNumber INTEGER NOT NULL,
+          customerName TEXT NOT NULL,
+          customerEmail TEXT NOT NULL,
+          startedAt TEXT NOT NULL,
+          endedAt TEXT,
+          isActive INTEGER DEFAULT 1,
+          FOREIGN KEY (cafeId) REFERENCES cafes(id),
+          FOREIGN KEY (tableId) REFERENCES tables(id)
+        )
+      `)
+    }
+
+    // Check if currency column exists in cafes table
+    const cafesInfo = db.prepare("PRAGMA table_info(cafes)").all() as Array<{ name: string }>
+    const hasCurrencyColumn = cafesInfo.some((col: { name: string }) => col.name === "currency")
+    
+    if (!hasCurrencyColumn) {
+      console.log("Adding currency column to cafes table...")
+      db.prepare("ALTER TABLE cafes ADD COLUMN currency TEXT DEFAULT 'USD'").run()
+      db.prepare("UPDATE cafes SET currency = 'USD' WHERE currency IS NULL").run()
+    }
+
+    // Add payment columns to orders table if they don't exist
+    
+    if (!hasPaymentMethod) {
+      console.log("Adding paymentMethod column to orders table...")
+      db.prepare("ALTER TABLE orders ADD COLUMN paymentMethod TEXT").run()
+    }
+    if (!hasPaidAt) {
+      console.log("Adding paidAt column to orders table...")
+      db.prepare("ALTER TABLE orders ADD COLUMN paidAt TEXT").run()
+    }
+    if (!hasBillNumber) {
+      console.log("Adding billNumber column to orders table...")
+      db.prepare("ALTER TABLE orders ADD COLUMN billNumber TEXT").run()
     }
   } catch (error: any) {
     // Migration failed, but continue

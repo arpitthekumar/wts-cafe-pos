@@ -11,6 +11,43 @@ export const categories = {
   getById: (id: string): Category | undefined => {
     return db.prepare("SELECT * FROM categories WHERE id = ?").get(id) as Category | undefined
   },
+
+  create: (category: Omit<Category, "id">): Category => {
+    const id = `cat-${Date.now()}`
+    db.prepare(`
+      INSERT INTO categories (id, cafeId, name, icon, "order")
+      VALUES (?, ?, ?, ?, ?)
+    `).run(
+      id,
+      category.cafeId,
+      category.name,
+      category.icon || null,
+      category.order || 0
+    )
+    return categories.getById(id)!
+  },
+
+  update: (id: string, updates: Partial<Category>): Category | null => {
+    const category = categories.getById(id)
+    if (!category) return null
+
+    db.prepare(`
+      UPDATE categories 
+      SET name = ?, icon = ?, "order" = ?
+      WHERE id = ?
+    `).run(
+      updates.name ?? category.name,
+      updates.icon ?? category.icon,
+      updates.order ?? category.order,
+      id
+    )
+    return categories.getById(id)!
+  },
+
+  delete: (id: string): boolean => {
+    const result = db.prepare("DELETE FROM categories WHERE id = ?").run(id)
+    return result.changes > 0
+  },
 }
 
 export const menuItems = {
@@ -73,6 +110,7 @@ export const menuItems = {
     return result.changes > 0
   },
 }
+
 
 
 

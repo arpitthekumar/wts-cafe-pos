@@ -6,6 +6,10 @@ export const orderItems = {
     return db.prepare("SELECT * FROM order_items WHERE orderId = ?").all(orderId) as OrderItem[]
   },
 
+  getById: (id: string): OrderItem | undefined => {
+    return db.prepare("SELECT * FROM order_items WHERE id = ?").get(id) as OrderItem | undefined
+  },
+
   create: (orderId: string, item: Omit<OrderItem, "id">): OrderItem => {
     const id = `oi-${Date.now()}`
     db.prepare(`
@@ -21,6 +25,11 @@ export const orderItems = {
       item.notes || null
     )
     return db.prepare("SELECT * FROM order_items WHERE id = ?").get(id) as OrderItem
+  },
+
+  delete: (id: string): boolean => {
+    const result = db.prepare("DELETE FROM order_items WHERE id = ?").run(id)
+    return result.changes > 0
   },
 }
 
@@ -63,8 +72,8 @@ export const orders = {
     const now = new Date().toISOString()
     
     db.prepare(`
-      INSERT INTO orders (id, cafeId, tableId, tableNumber, status, total, customerName, customerEmail, notes, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO orders (id, cafeId, tableId, tableNumber, status, total, customerName, customerEmail, notes, paymentMethod, paidAt, billNumber, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       order.cafeId,
@@ -75,6 +84,9 @@ export const orders = {
       order.customerName || null,
       order.customerEmail || null,
       order.notes || null,
+      order.paymentMethod || null,
+      order.paidAt || null,
+      order.billNumber || null,
       now,
       now
     )
@@ -94,7 +106,7 @@ export const orders = {
     const now = new Date().toISOString()
     db.prepare(`
       UPDATE orders 
-      SET status = ?, total = ?, customerName = ?, customerEmail = ?, notes = ?, updatedAt = ?
+      SET status = ?, total = ?, customerName = ?, customerEmail = ?, notes = ?, paymentMethod = ?, paidAt = ?, billNumber = ?, updatedAt = ?
       WHERE id = ?
     `).run(
       updates.status ?? order.status,
@@ -102,6 +114,9 @@ export const orders = {
       updates.customerName ?? order.customerName ?? null,
       updates.customerEmail ?? order.customerEmail ?? null,
       updates.notes ?? order.notes ?? null,
+      updates.paymentMethod ?? order.paymentMethod ?? null,
+      updates.paidAt ?? order.paidAt ?? null,
+      updates.billNumber ?? order.billNumber ?? null,
       now,
       id
     )

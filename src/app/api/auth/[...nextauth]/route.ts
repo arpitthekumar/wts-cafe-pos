@@ -74,11 +74,14 @@ const handler = NextAuth({
               }
             }
 
+            // Type assertion for profile
+            const userProfile = profile as { id: string; name: string | null; email: string | null; role: string | null }
+
             return {
-              id: profile.id,
-              name: profile.name || data.user.email || "",
-              email: profile.email || data.user.email || "",
-              role: profile.role || "employee",
+              id: userProfile.id,
+              name: userProfile.name || data.user.email || "",
+              email: userProfile.email || data.user.email || "",
+              role: userProfile.role || "employee",
             }
           } catch (error) {
             console.error("Supabase auth error, falling back to fake users:", error)

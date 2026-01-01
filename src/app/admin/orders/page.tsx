@@ -50,10 +50,11 @@ export default function OrdersPage() {
   const totalSales = orders.reduce((sum, o) => sum + o.total, 0)
   const completedOrders = orders.filter((o) => o.status === "completed")
 
-  const statusColors = {
+  const statusColors: Record<OrderStatus, string> = {
     pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
     preparing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
     ready: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    served: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
     completed: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
     cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
   }
