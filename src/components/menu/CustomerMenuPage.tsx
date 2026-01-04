@@ -11,7 +11,12 @@ import { OrderStatusBar } from "./OrderStatusBar"
 import { ReviewModal } from "./ReviewModal"
 import { CallEmployeeButton } from "./CallEmployeeButton"
 import { CustomerDetailsForm } from "./CustomerDetailsForm"
+import { CustomerProfile } from "./CustomerProfile"
+import { FeedbackNotification } from "./FeedbackNotification"
+import { BillingModal } from "./BillingModal"
 import { ThemeToggle } from "../common"
+import { useCafeCurrency } from "@/hooks/useCafeCurrency"
+import { formatCurrency } from "@/lib/utils/currency"
 
 export function CustomerMenuPage() {
   const params = useParams()
@@ -33,6 +38,11 @@ export function CustomerMenuPage() {
   const [showLeaveTable, setShowLeaveTable] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [tableSession, setTableSession] = useState<{ id: string; customerName: string; customerEmail: string } | null>(null)
+  const [showFeedbackNotification, setShowFeedbackNotification] = useState(false)
+  const [previousOrderStatus, setPreviousOrderStatus] = useState<string | null>(null)
+  const [showBillingModal, setShowBillingModal] = useState(false)
+  const currency = useCafeCurrency(cafe?.id)
 
   useEffect(() => {
     validateTableAndFetchData()
@@ -42,7 +52,11 @@ export function CustomerMenuPage() {
     if (cafe && table) {
       fetchMenuData()
       fetchCurrentOrder()
-      const interval = setInterval(fetchCurrentOrder, 3000)
+      fetchTableSession()
+      const interval = setInterval(() => {
+        fetchCurrentOrder()
+        fetchTableSession()
+      }, 3000)
       return () => clearInterval(interval)
     }
   }, [cafe, table])
@@ -101,15 +115,51 @@ export function CustomerMenuPage() {
     }
   }
 
+  async function fetchTableSession() {
+    if (!table) return
+    try {
+      const response = await fetch(`/api/table-sessions?tableId=${table.id}`)
+      if (response.ok) {
+        const session = await response.json()
+        if (session && session.isActive) {
+          setTableSession(session)
+          // Always sync customer details from session to persist across reloads
+          if (session.customerName && session.customerEmail) {
+            setCustomerDetails({
+              name: session.customerName,
+              email: session.customerEmail,
+            })
+          }
+        } else {
+          setTableSession(null)
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching table session:", error)
+    }
+  }
+
   async function fetchCurrentOrder() {
     if (!cafe || !table) return
     try {
-      const response = await fetch(`/api/orders?cafeId=${cafe.id}&tableId=${table.id}&status=pending,preparing,ready`)
+      const response = await fetch(`/api/orders?cafeId=${cafe.id}&tableId=${table.id}&status=pending,preparing,ready,served`)
       if (response.ok) {
         const orders = await response.json()
         const activeOrder = orders.find((o: Order) => 
           o.status !== "completed" && o.status !== "cancelled"
         )
+        
+        // Check if order status changed to ready or served for feedback notification
+        if (activeOrder) {
+          // Show feedback when order becomes served
+          if (activeOrder.status === "served" && 
+              previousOrderStatus && 
+              previousOrderStatus !== "served") {
+            setShowFeedbackNotification(true)
+          }
+          setPreviousOrderStatus(activeOrder.status)
+        }
+        
         setCurrentOrder(activeOrder || null)
         
         const completedOrder = orders.find((o: Order) => o.status === "completed")
@@ -208,7 +258,25 @@ export function CustomerMenuPage() {
       if (response.ok) {
         setCart([])
         setShowCart(false)
+        
+        // Create or update table session
+        if (customerDetails) {
+          await fetch("/api/table-sessions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              cafeId: cafe.id,
+              tableId: table.id,
+              tableNumber: table.number,
+              customerName: customerDetails.name,
+              customerEmail: customerDetails.email,
+            }),
+          })
+        }
+        
         fetchCurrentOrder()
+        fetchTableSession()
+        
         // Update table status to occupied
         await fetch(`/api/tables/${tableId}`, {
           method: "PUT",
@@ -227,17 +295,40 @@ export function CustomerMenuPage() {
   }
 
   async function handleLeaveTable() {
-    // Mark table as cleaning
-    if (!table) return
-    await fetch(`/api/tables/${table.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "cleaning" }),
-    })
-    setShowLeaveTable(false)
-    // Show review if order was completed
-    if (currentOrder?.status === "completed") {
-      setShowReview(true)
+    if (!table || !tableSession) return
+    
+    try {
+      // End table session
+      const sessionRes = await fetch(`/api/table-sessions?tableId=${table.id}`, {
+        method: "DELETE",
+      })
+      
+      if (!sessionRes.ok) {
+        throw new Error("Failed to end session")
+      }
+      
+      // Mark table as cleaning
+      const tableRes = await fetch(`/api/tables/${table.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cleaning" }),
+      })
+      
+      if (!tableRes.ok) {
+        throw new Error("Failed to update table status")
+      }
+      
+      // Clear all local state
+      setShowLeaveTable(false)
+      setTableSession(null)
+      setCustomerDetails(null)
+      setCurrentOrder(null)
+      
+      // Refresh page to show clean state
+      window.location.reload()
+    } catch (error) {
+      console.error("Error leaving table:", error)
+      alert("Failed to leave table. Please try again.")
     }
   }
 
@@ -288,28 +379,49 @@ export function CustomerMenuPage() {
           <div className="flex items-center gap-2">
             <CallEmployeeButton cafeId={cafe?.id || ""} tableId={table?.id || ""} />
             <Button onClick={() => setShowCart(!showCart)} variant="outline" size="sm">
-              Cart ({cart.length}) - ${total.toFixed(2)}
+              Cart ({cart.length}) - {formatCurrency(total, currency)}
             </Button>
             <ThemeToggle/>
           </div>
         </div>
       </header>
 
-      {currentOrder && (
-        <>
-          <OrderStatusBar order={currentOrder} />
-          {currentOrder.status === "completed" && (
-            <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-              <Button
-                onClick={() => setShowLeaveTable(true)}
-                className="w-full"
-                variant="outline"
-              >
-                Leave Table & Leave Review
-              </Button>
-            </div>
-          )}
-        </>
+      {(tableSession || customerDetails) && (
+        <CustomerProfile
+          customerName={customerDetails?.name || tableSession?.customerName || "Guest"}
+          customerEmail={customerDetails?.email || tableSession?.customerEmail || ""}
+          cafeId={cafe?.id || ""}
+          tableId={table?.id || ""}
+          onLeaveTable={() => setShowLeaveTable(true)}
+        />
+      )}
+
+      {currentOrder && tableSession && (
+        <OrderStatusBar order={currentOrder} />
+      )}
+      
+      {/* Show billing modal button only for served orders */}
+      {currentOrder && tableSession && currentOrder.status === "served" && (
+        <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
+          <Button
+            onClick={() => setShowBillingModal(true)}
+            className="w-full"
+            variant="outline"
+          >
+            💰 Select Payment Method
+          </Button>
+        </div>
+      )}
+
+      {showFeedbackNotification && currentOrder && currentOrder.status === "served" && (
+        <FeedbackNotification
+          order={currentOrder}
+          onClose={() => setShowFeedbackNotification(false)}
+          onSubmitReview={async (rating, comment) => {
+            await submitReview(rating, comment)
+            setShowFeedbackNotification(false)
+          }}
+        />
       )}
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -325,6 +437,7 @@ export function CustomerMenuPage() {
               key={item.id}
               item={item}
               onAddToCart={() => addToCart(item)}
+              currency={currency}
             />
           ))}
         </div>
@@ -345,6 +458,7 @@ export function CustomerMenuPage() {
         onRemoveItem={removeFromCart}
         onSubmitOrder={handlePlaceOrder}
         isSubmitting={isSubmitting}
+        currency={currency}
       />
 
       {showCustomerForm && (
@@ -373,18 +487,22 @@ export function CustomerMenuPage() {
           <div className="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
             <h2 className="mb-4 text-xl font-bold">Leave Table</h2>
             <p className="mb-4 text-sm text-muted-foreground">
-              Would you like to leave a review before leaving?
+              {currentOrder && (currentOrder.status === "completed" || currentOrder.status === "served")
+                ? "Would you like to leave a review before leaving?"
+                : "Are you sure you want to leave the table?"}
             </p>
             <div className="flex gap-2">
-              <Button
-                onClick={() => {
-                  setShowReview(true)
-                  setShowLeaveTable(false)
-                }}
-                className="flex-1"
-              >
-                Yes, Leave Review
-              </Button>
+              {currentOrder && (currentOrder.status === "completed" || currentOrder.status === "served") && (
+                <Button
+                  onClick={() => {
+                    setShowReview(true)
+                    setShowLeaveTable(false)
+                  }}
+                  className="flex-1"
+                >
+                  Yes, Leave Review
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={async () => {
@@ -393,11 +511,28 @@ export function CustomerMenuPage() {
                 }}
                 className="flex-1"
               >
-                No, Just Leave
+                {currentOrder && (currentOrder.status === "completed" || currentOrder.status === "served")
+                  ? "No, Just Leave"
+                  : "Leave Table"}
               </Button>
             </div>
           </div>
         </div>
+      )}
+
+      {showBillingModal && currentOrder && (
+        <BillingModal
+          order={currentOrder}
+          currency={currency}
+          cafeName={cafe?.name || ""}
+          onClose={() => setShowBillingModal(false)}
+          onPaymentComplete={async () => {
+            setShowBillingModal(false)
+            await fetchCurrentOrder()
+            await fetchTableSession()
+            // Don't mark table as cleaning - that happens only on Leave Table
+          }}
+        />
       )}
     </div>
   )

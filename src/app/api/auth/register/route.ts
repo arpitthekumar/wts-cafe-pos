@@ -72,7 +72,7 @@ export async function POST(request: Request) {
             name,
             email,
             role: "employee", // Default role
-          })
+          } as any)
 
         if (profileError) {
           // If profile creation fails, try to delete the auth user

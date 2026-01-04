@@ -34,9 +34,9 @@ export const cafes = {
     const id = `cafe-${Date.now()}`
     const now = new Date().toISOString()
     db.prepare(`
-      INSERT INTO cafes (id, name, address, phone, email, isActive, createdAt, updatedAt, adminId)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, cafe.name, cafe.address, cafe.phone || null, cafe.email || null, cafe.isActive ? 1 : 0, now, now, cafe.adminId || null)
+      INSERT INTO cafes (id, name, address, phone, email, isActive, currency, createdAt, updatedAt, adminId)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, cafe.name, cafe.address, cafe.phone || null, cafe.email || null, cafe.isActive ? 1 : 0, cafe.currency || "USD", now, now, cafe.adminId || null)
     return cafes.getById(id)!
   },
 
@@ -47,7 +47,7 @@ export const cafes = {
     const now = new Date().toISOString()
     db.prepare(`
       UPDATE cafes 
-      SET name = ?, address = ?, phone = ?, email = ?, isActive = ?, updatedAt = ?, adminId = ?
+      SET name = ?, address = ?, phone = ?, email = ?, isActive = ?, currency = ?, updatedAt = ?, adminId = ?
       WHERE id = ?
     `).run(
       updates.name ?? cafe.name,
@@ -55,6 +55,7 @@ export const cafes = {
       updates.phone ?? cafe.phone,
       updates.email ?? cafe.email,
       updates.isActive !== undefined ? (updates.isActive ? 1 : 0) : (cafe.isActive ? 1 : 0),
+      updates.currency ?? cafe.currency ?? "USD",
       now,
       updates.adminId ?? cafe.adminId,
       id
