@@ -16,11 +16,11 @@ export function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
           <h3 className="text-lg font-semibold">{item.name}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
         </div>
-        <span className="ml-4 text-lg font-bold">${item.price.toFixed(2)}</span>
+        <span className="ml-4 text-lg font-bold">₹{item.price.toFixed(2)}</span>
       </div>
       <Button
         onClick={onAddToCart}
-        className="w-full"
+        className="w-full hover:scale-105"
         disabled={!item.available}
       >
         {item.available ? "Add to Cart" : "Unavailable"}

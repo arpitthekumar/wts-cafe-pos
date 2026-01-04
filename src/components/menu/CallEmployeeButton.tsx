@@ -39,7 +39,9 @@ export function CallEmployeeButton({ cafeId, tableId }: CallEmployeeButtonProps)
       variant={helpRequested ? "default" : "outline"}
       size="sm"
       disabled={helpRequested}
+      className="hover:scale-105"
     >
+
       {helpRequested ? "✓ Help Requested" : "Call Employee"}
     </Button>
   )
