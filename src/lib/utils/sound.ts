@@ -75,3 +75,4 @@ export const sounds = {
     playOneShot("/sounds/success.mp3", 0.6)
   },
 }
+

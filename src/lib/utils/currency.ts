@@ -11,3 +11,4 @@ export function getCurrencySymbol(currency: Currency = "USD"): string {
   return currency === "INR" ? "₹" : "$"
 }
 
+

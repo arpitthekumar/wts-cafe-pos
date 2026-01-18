@@ -141,3 +141,4 @@ CREATE TABLE table_sessions (
 - New `table_sessions` table is created automatically
 - No data migration needed - sessions start fresh
 
+

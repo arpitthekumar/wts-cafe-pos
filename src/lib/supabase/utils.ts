@@ -40,3 +40,4 @@ export function fromBool(val: boolean | null | undefined): boolean {
 // Export types for convenience
 export type { Tables, Inserts, Updates }
 
+
