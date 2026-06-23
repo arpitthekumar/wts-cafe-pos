@@ -378,9 +378,18 @@ export function CustomerMenuPage() {
           </h1>
           <div className="flex items-center gap-2">
             <CallEmployeeButton cafeId={cafe?.id || ""} tableId={table?.id || ""} />
-            <Button onClick={() => setShowCart(!showCart)} variant="outline" size="sm">
-              Cart ({cart.length}) - {formatCurrency(total, currency)}
-            </Button>
+            <Button
+onClick={() => setShowCart(!showCart)}
+className="
+rounded-2xl
+bg-orange-500
+hover:bg-orange-600
+text-white
+shadow-lg
+"
+>
+🛒 {cart.length} • {formatCurrency(total,currency)}
+</Button>
             <ThemeToggle/>
           </div>
         </div>
