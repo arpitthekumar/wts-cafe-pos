@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { cafeId, tableId, items, customerName, customerEmail } = body
+    const { cafeId, tableId, items, customerName, customerEmail, notes } = body
 
     if (!cafeId || !tableId || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -73,6 +73,7 @@ export async function POST(request: Request) {
       total,
       customerName,
       customerEmail,
+      notes: notes || null,
     })
 
     return NextResponse.json(newOrder, { status: 201 })

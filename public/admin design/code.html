@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vivid Cravings Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .sidebar-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f8f9fa",
+                    "primary-fixed": "#ffdbc8",
+                    "secondary-container": "#ff5a5f",
+                    "on-primary-container": "#5e2a00",
+                    "on-primary-fixed-variant": "#733500",
+                    "secondary": "#b52330",
+                    "surface-variant": "#e1e3e4",
+                    "surface-container": "#edeeef",
+                    "on-surface-variant": "#574236",
+                    "on-secondary-fixed-variant": "#92001b",
+                    "surface-dim": "#d9dadb",
+                    "primary-container": "#fc8019",
+                    "outline": "#8b7264",
+                    "tertiary": "#5f5e5e",
+                    "secondary-fixed-dim": "#ffb3b0",
+                    "inverse-primary": "#ffb689",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-tint": "#984800",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "primary-fixed-dim": "#ffb689",
+                    "on-tertiary-fixed": "#1b1b1b",
+                    "on-background": "#191c1d",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#ffdad8",
+                    "primary": "#984800",
+                    "on-primary-fixed": "#311300",
+                    "tertiary-container": "#a4a2a2",
+                    "on-tertiary": "#ffffff",
+                    "inverse-surface": "#2e3132",
+                    "error-container": "#ffdad6",
+                    "background": "#f8f9fa",
+                    "surface-container-high": "#e7e8e9",
+                    "outline-variant": "#dec1b0",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-surface": "#191c1d",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#e5e2e1",
+                    "on-secondary-fixed": "#410007",
+                    "on-tertiary-container": "#393939",
+                    "on-secondary-container": "#60000e",
+                    "surface-bright": "#f8f9fa",
+                    "surface-container-low": "#f3f4f5",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "48px",
+                    "lg": "40px",
+                    "base": "4px",
+                    "margin-mobile": "16px",
+                    "sm": "16px",
+                    "md": "24px",
+                    "xl": "64px",
+                    "xs": "8px",
+                    "gutter": "20px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Be Vietnam Pro"],
+                    "label-md": ["Be Vietnam Pro"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "body-lg": ["Be Vietnam Pro"],
+                    "headline-xl": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-md": ["Be Vietnam Pro"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- SideNavBar (Authority: Shared Components JSON) -->
+<aside class="h-screen w-64 fixed left-0 top-0 z-50 bg-surface-container flex flex-col p-4 border-r border-outline-variant shadow-xl">
+<div class="mb-10 px-2">
+<h1 class="font-headline-md text-headline-md text-primary font-extrabold">Admin Console</h1>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-70">Vivid Cravings Platform</p>
+</div>
+<nav class="flex-grow space-y-2">
+<!-- Active Tab: Dashboard (Implicitly mapping to Overview/Analytics intent) -->
+<a class="flex items-center gap-3 text-tertiary px-4 py-3 hover:bg-surface-variant rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-tertiary px-4 py-3 hover:bg-surface-variant rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant_menu">restaurant_menu</span>
+<span class="font-label-md text-label-md">Menu</span>
+</a>
+<a class="flex items-center gap-3 text-tertiary px-4 py-3 hover:bg-surface-variant rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="table_restaurant">table_restaurant</span>
+<span class="font-label-md text-label-md">Tables</span>
+</a>
+<a class="flex items-center gap-3 text-tertiary px-4 py-3 hover:bg-surface-variant rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="badge">badge</span>
+<span class="font-label-md text-label-md">Employees</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 shadow-md transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3 rounded-xl font-label-md text-label-md hover:scale-[1.03] transition-all active:scale-95 mb-4 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                System Settings
+            </button>
+<a class="flex items-center gap-3 text-tertiary px-4 py-3 hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen">
+<!-- TopAppBar (Authority: Shared Components JSON) -->
+<header class="w-full sticky top-0 z-40 bg-surface/80 backdrop-blur-md px-margin-desktop py-4 flex justify-between items-center shadow-xl">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-md text-headline-md font-extrabold text-primary">Vivid Cravings</h2>
+</div>
+<div class="flex items-center gap-6">
+<!-- Search Bar -->
+<div class="relative w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-md" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container rounded-full border-none focus:ring-2 focus:ring-primary-container text-body-md" placeholder="Search orders, menu..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a modern restaurant administrator, a 30-year-old woman with a friendly expression. She is wearing a smart-casual blazer. The background is a blurred, high-end cafe interior with warm lighting and orange accents. The lighting is soft and flattering, emphasizing a clean and professional look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7X3dxVE550J9aUbe61J6ruOpRuEcWL5swSC9UONTW_abc6LlPH9dP3ZyC0HWySmUKLDJ4y28GUh1pUvICYcXRXEm_w49ZGCPaCbHGNMbStiX_ndDLvsSiqHpii0hTEI1oB2GpkGHwR_RdnzCT7a7Q9W0x8o0WpSSead9uaJiptNuiUKqGnMHGIc2ZmDmrDRJ66knrh0VnPcTbKPvkQX05GuELdq-0SvwxGm0jZacksk11yqBQT4hNRGFSmX429xrKzqUvIrtW-y2a"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Body -->
+<div class="p-margin-desktop space-y-md">
+<!-- Header Greeting -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<h3 class="font-headline-lg text-headline-lg text-on-background">Good morning, Admin</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Here's what's happening at Vivid Cravings today.</p>
+</div>
+<div class="flex gap-2">
+<div class="px-4 py-2 bg-surface-container-high rounded-full flex items-center gap-2 font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        System Online
+                    </div>
+</div>
+</div>
+<!-- Key Metrics Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Total Revenue -->
+<div class="glass-card p-6 rounded-[20px] shadow-xl hover:scale-[1.03] transition-all duration-200 group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-3 bg-primary-fixed rounded-xl text-primary">
+<span class="material-symbols-outlined fill-icon" data-icon="payments">payments</span>
+</div>
+<span class="text-green-600 font-label-md text-label-md flex items-center gap-1">
+                            +12.5% <span class="material-symbols-outlined text-label-sm" data-icon="trending_up">trending_up</span>
+</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total Revenue</p>
+<h4 class="font-headline-md text-headline-md font-extrabold mt-1">$42,850.00</h4>
+</div>
+<!-- Total Orders -->
+<div class="glass-card p-6 rounded-[20px] shadow-xl hover:scale-[1.03] transition-all duration-200 group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-3 bg-secondary-fixed rounded-xl text-secondary">
+<span class="material-symbols-outlined fill-icon" data-icon="shopping_bag">shopping_bag</span>
+</div>
+<span class="text-green-600 font-label-md text-label-md flex items-center gap-1">
+                            +8.2% <span class="material-symbols-outlined text-label-sm" data-icon="trending_up">trending_up</span>
+</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total Orders</p>
+<h4 class="font-headline-md text-headline-md font-extrabold mt-1">1,284</h4>
+</div>
+<!-- Active Tables -->
+<div class="glass-card p-6 rounded-[20px] shadow-xl hover:scale-[1.03] transition-all duration-200 group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-3 bg-surface-container-highest rounded-xl text-primary">
+<span class="material-symbols-outlined fill-icon" data-icon="table_bar">table_bar</span>
+</div>
+<span class="text-on-surface-variant font-label-md text-label-md">18 / 24</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Active Tables</p>
+<h4 class="font-headline-md text-headline-md font-extrabold mt-1">75% Capacity</h4>
+</div>
+<!-- Staff Online -->
+<div class="glass-card p-6 rounded-[20px] shadow-xl hover:scale-[1.03] transition-all duration-200 group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-3 bg-tertiary-fixed rounded-xl text-tertiary">
+<span class="material-symbols-outlined fill-icon" data-icon="group">group</span>
+</div>
+<button class="text-primary font-label-sm text-label-sm underline">View All</button>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Staff Online</p>
+<h4 class="font-headline-md text-headline-md font-extrabold mt-1">14 Members</h4>
+</div>
+</section>
+<!-- Navigation Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-12 grid-rows-2 gap-gutter h-[600px]">
+<!-- Menu Management (Large Card) -->
+<div class="md:col-span-8 bg-primary-container text-on-primary-container rounded-[20px] shadow-xl overflow-hidden relative group cursor-pointer">
+<div class="absolute inset-0 opacity-10 mix-blend-overlay">
+<img class="w-full h-full object-cover" data-alt="A macro photography shot of vibrant, fresh culinary ingredients—bright red tomatoes, green basil, and golden olive oil. The image is stylized with a high-contrast, modern food photography aesthetic, perfectly aligning with the Vivid Cravings orange brand palette. The lighting is cinematic and appetizing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZTQqkotJWAE0QlS2oDDg3hlYZjBObmN0A85EhpsvI6x6moebROnYhQ-iXO9wFW4oZNaer82pdJu4f2tqGbtyfwRH2CKzIUYEi0zQPUwSTxTavCt44hM58fzXZ4x1G9Y14VE5JAeorhN_QeoA6MXVvnAm0B9zWyoPS_LGl8KN9ifbSP3xTs7MZTaGHHx6HzK9kkmzbKCUhlYEfLHo4RRKrRZViTufbI6dRF0ZdGMI5_MBi2CMWVL3agitPz0tjYfaGjSpGrnY9jIE8"/>
+</div>
+<div class="relative h-full p-8 flex flex-col justify-between z-10">
+<div>
+<span class="material-symbols-outlined text-4xl mb-4" data-icon="menu_book">menu_book</span>
+<h5 class="font-headline-lg text-headline-lg">Menu Management</h5>
+<p class="font-body-md text-body-md mt-2 opacity-90 max-w-md">Update items, seasonal specials, and pricing across all digital platforms in real-time.</p>
+</div>
+<div class="flex items-center gap-4">
+<span class="px-4 py-2 bg-on-primary-container/20 rounded-full font-label-md text-label-md">240 Active Items</span>
+<span class="px-4 py-2 bg-on-primary-container/20 rounded-full font-label-md text-label-md">12 Categories</span>
+</div>
+</div>
+<div class="absolute right-0 bottom-0 p-8 transform translate-x-4 translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-300 opacity-20">
+<span class="material-symbols-outlined text-[200px]" data-icon="restaurant">restaurant</span>
+</div>
+</div>
+<!-- Sales & Reports -->
+<div class="md:col-span-4 bg-surface-container-highest rounded-[20px] shadow-xl p-8 flex flex-col justify-between hover:scale-[1.02] transition-all cursor-pointer group">
+<div>
+<div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white mb-6">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+</div>
+<h5 class="font-headline-md text-headline-md text-on-surface">Sales &amp; Reports</h5>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">In-depth performance analytics and financial tracking.</p>
+</div>
+<div class="flex items-center text-primary font-label-md text-label-md group-hover:translate-x-2 transition-transform">
+                        Explore Insights <span class="material-symbols-outlined ml-2" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+<!-- Table Management -->
+<div class="md:col-span-4 glass-card rounded-[20px] shadow-xl p-8 flex flex-col justify-between hover:scale-[1.02] transition-all cursor-pointer border-2 border-transparent hover:border-primary-container/30 group">
+<div>
+<span class="material-symbols-outlined text-primary text-3xl mb-4" data-icon="grid_view">grid_view</span>
+<h5 class="font-headline-md text-headline-md">Table Management</h5>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Manage floor plans and real-time reservations.</p>
+</div>
+<div class="mt-4 flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-green-200 border-2 border-white"></div>
+<div class="w-8 h-8 rounded-full bg-orange-200 border-2 border-white"></div>
+<div class="w-8 h-8 rounded-full bg-red-200 border-2 border-white"></div>
+<div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[10px] font-bold">+5</div>
+</div>
+</div>
+<!-- Employee Management -->
+<div class="md:col-span-3 bg-secondary-fixed rounded-[20px] shadow-xl p-8 flex flex-col justify-between hover:scale-[1.02] transition-all cursor-pointer group">
+<div>
+<span class="material-symbols-outlined text-secondary text-3xl mb-4" data-icon="badge">badge</span>
+<h5 class="font-headline-md text-headline-md text-on-secondary-container">Employees</h5>
+<p class="font-body-md text-body-md text-on-secondary-fixed-variant mt-2">Schedules &amp; performance.</p>
+</div>
+<span class="material-symbols-outlined self-end text-secondary/30 text-5xl group-hover:scale-125 transition-transform" data-icon="engineering">engineering</span>
+</div>
+<!-- Customer Reviews -->
+<div class="md:col-span-5 bg-white rounded-[20px] shadow-xl p-8 flex items-center gap-6 hover:scale-[1.02] transition-all cursor-pointer">
+<div class="flex-grow">
+<h5 class="font-headline-md text-headline-md">Customer Reviews</h5>
+<div class="flex items-center gap-1 my-2">
+<span class="material-symbols-outlined text-primary-container fill-icon" data-icon="star">star</span>
+<span class="material-symbols-outlined text-primary-container fill-icon" data-icon="star">star</span>
+<span class="material-symbols-outlined text-primary-container fill-icon" data-icon="star">star</span>
+<span class="material-symbols-outlined text-primary-container fill-icon" data-icon="star">star</span>
+<span class="material-symbols-outlined text-primary-container" data-icon="star_half">star_half</span>
+<span class="ml-2 font-label-md text-label-md">4.8 Average</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">12 New reviews this week</p>
+</div>
+<div class="w-24 h-24 relative">
+<!-- Small Gauge Visualization -->
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="40" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center font-bold text-headline-md">84%</div>
+</div>
+</div>
+</section>
+<!-- Bottom Section: Recent Activity & Notifications -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mt-md">
+<div class="lg:col-span-2 glass-card rounded-[20px] p-8 shadow-xl">
+<div class="flex justify-between items-center mb-6">
+<h5 class="font-headline-md text-headline-md">Live Activity Feed</h5>
+<button class="font-label-md text-label-md text-primary">View All History</button>
+</div>
+<div class="space-y-6">
+<div class="flex items-start gap-4">
+<div class="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+<div>
+<p class="font-body-md text-body-md"><strong>Table 4</strong> has requested the bill.</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2 mins ago</span>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-2 h-2 rounded-full bg-green-500 mt-2 flex-shrink-0"></div>
+<div>
+<p class="font-body-md text-body-md">New supply delivery confirmed: <strong>Fresh Produce</strong>.</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">15 mins ago</span>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
+<div>
+<p class="font-body-md text-body-md">Employee <strong>Sarah M.</strong> clocked in for lunch shift.</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant">45 mins ago</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low border border-outline-variant rounded-[20px] p-8">
+<h5 class="font-headline-md text-headline-md mb-6">Quick Actions</h5>
+<div class="grid grid-cols-2 gap-4">
+<button class="p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center gap-2 text-primary">
+<span class="material-symbols-outlined" data-icon="add_box">add_box</span>
+<span class="font-label-sm text-label-sm">Add Item</span>
+</button>
+<button class="p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center gap-2 text-primary">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="font-label-sm text-label-sm">Booking</span>
+</button>
+<button class="p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center gap-2 text-primary">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-sm text-label-sm">Promo</span>
+</button>
+<button class="p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center gap-2 text-primary">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="font-label-sm text-label-sm">Support</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Contextual Floating Action Button -->
+<button class="fixed bottom-8 right-8 w-16 h-16 bg-primary-container text-on-primary-container rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-3xl" data-icon="bolt">bolt</span>
+</button>
+<script>
+        // Simple micro-interactions
+        document.querySelectorAll('.glass-card, .bg-primary-container, .bg-secondary-fixed').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                // Subtle lift handled by tailwind, but can add JS effects here
+            });
+        });
+
+        // Search bar focus effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-2', 'ring-primary-container');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-2', 'ring-primary-container');
+        });
+    </script>
+</body></html>

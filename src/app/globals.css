@@ -8,6 +8,24 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-headline: var(--font-plus-jakarta);
+  --font-body: var(--font-be-vietnam);
+  --color-vivid-primary: #984800;
+  --color-vivid-primary-container: #fc8019;
+  --color-vivid-secondary: #b52330;
+  --color-vivid-secondary-container: #ff5a5f;
+  --color-vivid-background: #f8f9fa;
+  --color-vivid-on-background: #191c1d;
+  --color-vivid-surface: #f8f9fa;
+  --color-vivid-on-surface: #191c1d;
+  --color-vivid-surface-container: #edeeef;
+  --color-vivid-surface-container-low: #f3f4f5;
+  --color-vivid-surface-container-lowest: #ffffff;
+  --color-vivid-surface-container-high: #e7e8e9;
+  --color-vivid-surface-container-highest: #e1e3e4;
+  --radius-vivid-card: 20px;
+  --radius-vivid-btn: 14px;
+  --radius-chip: 14px;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -122,4 +140,12 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.font-headline {
+  font-family: var(--font-plus-jakarta), sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-be-vietnam), sans-serif;
 }
