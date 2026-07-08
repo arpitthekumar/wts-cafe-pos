@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Order } from "@/lib/types"
-import { Button } from "@/components/ui"
 import { useCafeCurrency } from "@/hooks/useCafeCurrency"
 import { formatCurrency } from "@/lib/utils/currency"
 import { User, LogOut, Receipt, History, X } from "lucide-react"
@@ -17,17 +16,10 @@ interface CustomerProfileProps {
 
 export function CustomerProfile({ customerName, customerEmail, cafeId, tableId, onLeaveTable }: CustomerProfileProps) {
   const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
   const [showHistory, setShowHistory] = useState(false)
   const currency = useCafeCurrency(cafeId)
 
-  useEffect(() => {
-    fetchOrders()
-    const interval = setInterval(fetchOrders, 3000)
-    return () => clearInterval(interval)
-  }, [cafeId, customerEmail, tableId])
-
-  async function fetchOrders() {
+  const fetchOrders = useCallback(async () => {
     try {
       const response = await fetch(`/api/orders?cafeId=${cafeId}&tableId=${tableId}&status=pending,preparing,ready,served,completed`)
       if (response.ok) {
@@ -43,10 +35,14 @@ export function CustomerProfile({ customerName, customerEmail, cafeId, tableId, 
       }
     } catch (error) {
       console.error("Error fetching orders:", error)
-    } finally {
-      setLoading(false)
     }
-  }
+  }, [cafeId, customerEmail, tableId])
+
+  useEffect(() => {
+    fetchOrders()
+    const interval = setInterval(fetchOrders, 3000)
+    return () => clearInterval(interval)
+  }, [fetchOrders])
 
   const statusColors: Record<Order["status"], string> = {
     pending: "bg-amber-50 text-amber-600 border-amber-200/40 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30",
