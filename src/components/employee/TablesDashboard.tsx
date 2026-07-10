@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Table, TableStatus, Order, TableSession } from "@/lib/types"
 import { Button } from "@/components/ui"
 import { TableBillingModal } from "./TableBillingModal"
-import { cafes } from "@/lib/db/queries"
+import { User, Coins, RefreshCw, Layers, CheckCircle2 } from "lucide-react"
 
 interface TablesDashboardProps {
   cafeId: string
@@ -75,7 +75,6 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
       })
 
       if (response.ok) {
-        // If changing to cleaning or empty, end the table session
         if (status === "cleaning" || status === "empty") {
           await fetch(`/api/table-sessions?tableId=${tableId}`, {
             method: "DELETE",
@@ -95,23 +94,17 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
   }
 
   function getTableStatus(table: Table): TableStatus {
-    // Check if there's an active session - table should show as "cleaning" if customer is present
     const hasActiveSession = sessions.some(s => s.tableId === table.id && s.isActive)
-    
-    // Check if table has served order
     const hasServedOrder = orders.some(
       (o) => o.tableId === table.id && o.status === "served"
     )
     if (hasServedOrder) return "served"
     
-    // Check if table has active order
     const hasActiveOrder = orders.some(
       (o) => o.tableId === table.id && o.status !== "completed" && o.status !== "cancelled" && o.status !== "served"
     )
     
     if (hasActiveOrder) return "occupied"
-    
-    // If there's an active session but no orders, show as cleaning (customer is at table)
     if (hasActiveSession) return "cleaning"
     
     return table.status || "empty"
@@ -121,90 +114,83 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
     return sessions.find(s => s.tableId === table.id && s.isActive)
   }
 
-  function getStatusColor(status: TableStatus) {
-    switch (status) {
-      case "occupied":
-        return "bg-orange-500"
-      case "served":
-        return "bg-purple-500"
-      case "cleaning":
-        return "bg-yellow-500"
-      case "reserved":
-        return "bg-blue-500"
-      case "empty":
-      default:
-        return "bg-gray-300 dark:bg-gray-600"
-    }
+  const borderStyles: Record<TableStatus, string> = {
+    empty: "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300",
+    occupied: "border-orange-500 bg-orange-500/5 dark:bg-orange-500/10",
+    served: "border-purple-500 bg-purple-500/5 dark:bg-purple-500/10",
+    cleaning: "border-yellow-500 bg-yellow-500/5 dark:bg-yellow-500/10",
+    reserved: "border-blue-500 bg-blue-500/5 dark:bg-blue-500/10",
+  }
+
+  const dotColors: Record<TableStatus, string> = {
+    empty: "bg-zinc-300 dark:bg-zinc-600",
+    occupied: "bg-orange-500",
+    served: "bg-purple-500",
+    cleaning: "bg-yellow-500",
+    reserved: "bg-blue-500",
   }
 
   function getStatusLabel(status: TableStatus) {
     switch (status) {
-      case "occupied":
-        return "Occupied"
-      case "served":
-        return "Served"
-      case "cleaning":
-        return "Cleaning"
-      case "reserved":
-        return "Reserved"
-      case "empty":
-      default:
-        return "Ready to Use"
+      case "occupied": return "Occupied"
+      case "served": return "Served"
+      case "cleaning": return "Cleaning"
+      case "reserved": return "Reserved"
+      default: return "Ready to Use"
     }
   }
 
   function getNextStatusOptions(currentStatus: TableStatus): TableStatus[] {
     switch (currentStatus) {
-      case "occupied":
-        return ["served", "cleaning", "empty"]
-      case "served":
-        return ["cleaning", "empty", "occupied"]
-      case "cleaning":
-        return ["empty", "occupied", "reserved"]
-      case "reserved":
-        return ["empty", "occupied"]
-      case "empty":
-      default:
-        return ["occupied", "reserved", "cleaning"]
+      case "occupied": return ["served", "cleaning", "empty"]
+      case "served": return ["cleaning", "empty", "occupied"]
+      case "cleaning": return ["empty", "occupied", "reserved"]
+      case "reserved": return ["empty", "occupied"]
+      default: return ["occupied", "reserved", "cleaning"]
     }
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <p>Loading tables...</p>
+        <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <span className="ml-2 text-sm text-muted-foreground font-medium">Loading tables...</span>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Live Table Status (Visual)</h2>
-        <div className="flex flex-wrap gap-3 text-xs">
+    <div className="space-y-5 bg-card border border-border/60 rounded-[20px] p-5 shadow-xs">
+      {/* Header and Legend */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/80 pb-4">
+        <h2 className="font-headline text-base font-extrabold text-foreground">Live Tables Dashboard</h2>
+        
+        {/* Status Legend */}
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-bold text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <div className="h-4 w-4 rounded bg-gray-300 dark:bg-gray-600"></div>
-            <span className="text-gray-700 dark:text-gray-300">Ready to Use</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+            <span>Ready</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-4 w-4 rounded bg-orange-500"></div>
-            <span className="text-gray-700 dark:text-gray-300">Occupied</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+            <span>Occupied</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-4 w-4 rounded bg-yellow-500"></div>
-            <span className="text-gray-700 dark:text-gray-300">Cleaning</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+            <span>Cleaning</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-4 w-4 rounded bg-blue-500"></div>
-            <span className="text-gray-700 dark:text-gray-300">Reserved</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+            <span>Reserved</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-4 w-4 rounded bg-purple-500"></div>
-            <span className="text-gray-700 dark:text-gray-300">Served</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+            <span>Served</span>
           </div>
         </div>
       </div>
 
+      {/* Grid of tables */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {tables.map((table) => {
           const status = getTableStatus(table)
@@ -219,111 +205,116 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
             <div key={table.id} className="relative">
               <button
                 onClick={() => setSelectedTable(isSelected ? null : table.id)}
-                className={`w-full rounded-lg border-2 p-6 transition-all ${
-                  getStatusColor(status)
+                className={`w-full rounded-[20px] p-5 border-2 transition-all duration-300 flex flex-col items-center justify-center min-h-[115px] relative cursor-pointer ${
+                  borderStyles[status]
                 } ${
                   isSelected
-                    ? "ring-4 ring-blue-400 ring-offset-2 dark:ring-offset-gray-900"
-                    : "hover:opacity-90 hover:scale-105"
-                } ${status === "occupied" ? "border-orange-600" : status === "served" ? "border-purple-600" : status === "cleaning" ? "border-yellow-600" : status === "reserved" ? "border-blue-600" : "border-gray-400 dark:border-gray-500"}`}
+                    ? "ring-4 ring-orange-500/20 scale-[1.03]"
+                    : "hover:scale-[1.03]"
+                }`}
               >
+                {/* Floating Status Dot */}
+                <span className="absolute top-3 right-3 flex h-2.5 w-2.5">
+                  {(status === "occupied" || status === "cleaning") && (
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${dotColors[status]}`} />
+                  )}
+                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${dotColors[status]}`} />
+                </span>
+
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-white drop-shadow-lg">
+                  <div className="text-3xl font-headline font-extrabold text-foreground">
                     {table.number}
                   </div>
                   {tableCustomer && (
-                    <div className="mt-1 text-xs font-semibold text-white/95">
-                      {tableCustomer.customerName}
+                    <div className="mt-1.5 text-[10px] font-bold text-foreground/80 flex items-center justify-center gap-1">
+                      <User className="w-3 h-3 text-orange-500" />
+                      <span className="truncate max-w-[80px]">{tableCustomer.customerName}</span>
                     </div>
                   )}
                   {tableOrder && (
-                    <div className="mt-1 text-xs font-semibold text-white/90">
-                      Order {tableOrder.status}
+                    <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                      Order: {tableOrder.status}
+                    </div>
+                  )}
+                  {!tableCustomer && !tableOrder && (
+                    <div className="mt-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                      {status === "empty" ? "Available" : status}
                     </div>
                   )}
                 </div>
               </button>
 
+              {/* Action Dropdown Card */}
               {isSelected && (
-                <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-lg border bg-background p-3 shadow-lg">
-                  <div className="mb-2 text-center">
-                    <p className="text-sm font-semibold">Table {table.number}</p>
+                <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-[20px] border border-border bg-card p-4 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200 w-52 sm:w-56">
+                  <div className="mb-3 text-center border-b border-border pb-2">
+                    <p className="font-headline font-extrabold text-sm text-foreground">Table {table.number}</p>
                     {tableCustomer && (
-                      <p className="text-xs font-medium text-foreground">
-                        Customer: {tableCustomer.customerName}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      Current: {getStatusLabel(status)}
-                    </p>
-                    {table.capacity && (
-                      <p className="text-xs text-muted-foreground">
-                        Capacity: {table.capacity}
+                      <p className="text-[10px] font-semibold text-muted-foreground truncate mt-0.5">
+                        {tableCustomer.customerName} ({tableCustomer.customerEmail.slice(0, 10)}...)
                       </p>
                     )}
                   </div>
                   
                   <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">Change Status:</p>
-                    {nextOptions.map((nextStatus) => (
-                      <Button
-                        key={nextStatus}
-                        size="sm"
-                        variant="outline"
-                        className="w-full text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          updateTableStatus(table.id, nextStatus)
-                        }}
-                      >
-                        Mark as {getStatusLabel(nextStatus)}
-                      </Button>
-                    ))}
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Set Status</p>
+                    <div className="grid grid-cols-1 gap-1">
+                      {nextOptions.map((nextStatus) => (
+                        <button
+                          key={nextStatus}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            updateTableStatus(table.id, nextStatus)
+                          }}
+                          className="h-8 text-[11px] font-bold border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg text-foreground cursor-pointer transition-colors"
+                        >
+                          Mark as {getStatusLabel(nextStatus)}
+                        </button>
+                      ))}
+                    </div>
+
                     {tableCustomer && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="w-full text-xs mt-2"
+                      <div className="pt-2 border-t border-border mt-2 space-y-1">
+                        <button
                           onClick={(e) => {
                             e.stopPropagation()
                             setBillingTable(table)
                             setShowBillingModal(true)
                           }}
+                          className="w-full h-8.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-orange-500/10"
                         >
-                          💰 Bill Table
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="w-full text-xs mt-1"
+                          <Coins className="w-3.5 h-3.5" />
+                          <span>Bill Table</span>
+                        </button>
+                        <button
                           onClick={(e) => {
                             e.stopPropagation()
                             updateTableStatus(table.id, "cleaning")
                           }}
+                          className="w-full h-8 rounded-lg border border-red-200 hover:bg-red-50 dark:border-red-950 dark:hover:bg-red-950/10 text-red-600 dark:text-red-400 font-bold text-xs transition-colors cursor-pointer"
                         >
-                          End Session & Mark Cleaning
-                        </Button>
-                      </>
+                          End Session & Clean
+                        </button>
+                      </div>
                     )}
+
                     {!tableCustomer && (status === "served" || status === "occupied") && (
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="w-full text-xs mt-2"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setBillingTable(table)
-                          setShowBillingModal(true)
-                        }}
-                      >
-                        💰 Bill Table
-                      </Button>
+                      <div className="pt-2 border-t border-border mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setBillingTable(table)
+                            setShowBillingModal(true)
+                          }}
+                          className="w-full h-8.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          <Coins className="w-3.5 h-3.5" />
+                          <span>Bill Table</span>
+                        </button>
+                      </div>
                     )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full text-xs mt-1"
+
+                    <button
                       onClick={async (e) => {
                         e.stopPropagation()
                         if (confirm(`Reset Table ${table.number} to empty? This will clear all sessions.`)) {
@@ -341,9 +332,11 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
                           }
                         }
                       }}
+                      className="w-full h-8.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-muted-foreground hover:text-foreground font-bold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer mt-1"
                     >
-                      🔄 Reset Table
-                    </Button>
+                      <RefreshCw className="w-3 h-3" />
+                      <span>Reset Table</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -371,6 +364,3 @@ export function TablesDashboard({ cafeId }: TablesDashboardProps) {
     </div>
   )
 }
-
-
-

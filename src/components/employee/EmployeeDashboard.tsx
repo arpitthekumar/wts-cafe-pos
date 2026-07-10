@@ -190,11 +190,10 @@ export function EmployeeDashboard() {
           />
         )}
 
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Tables</h2>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline"
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 className="font-headline text-lg font-extrabold text-foreground">Tables & Placement Status</h2>
+          <div className="flex gap-2.5">
+            <button 
               onClick={async () => {
                 if (confirm("Reset all tables to 'Ready to Use'? This will clear all sessions.")) {
                   try {
@@ -210,12 +209,16 @@ export function EmployeeDashboard() {
                   }
                 }
               }}
+              className="flex items-center gap-1.5 h-10 px-4 rounded-chip border border-zinc-200 hover:border-orange-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 hover:bg-orange-50/20 text-zinc-600 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 font-bold text-sm transition-all duration-200 hover:scale-102 active:scale-98 cursor-pointer"
             >
               🔄 Reset All Tables
-            </Button>
-            <Button onClick={() => setShowCreateOrderModal(true)}>
+            </button>
+            <button 
+              onClick={() => setShowCreateOrderModal(true)}
+              className="flex items-center gap-1.5 h-10 px-4 rounded-chip bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-md shadow-orange-500/10 transition-all hover:scale-102 active:scale-98 cursor-pointer"
+            >
               + Create Order
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -311,11 +314,14 @@ function OrderColumn({
   disabled,
 }: OrderColumnProps) {
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <h2 className="mb-4 text-lg font-semibold">{title} ({orders.length})</h2>
-      <div className="space-y-3">
+    <div className="rounded-[20px] border border-border/60 bg-zinc-50/30 dark:bg-zinc-900/10 p-4 min-h-[300px]">
+      <h2 className="mb-4 font-headline text-sm font-extrabold text-foreground flex items-center justify-between">
+        <span>{title}</span>
+        <span className="bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full text-xs font-bold">{orders.length}</span>
+      </h2>
+      <div className="space-y-3.5">
         {orders.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No orders</p>
+          <p className="text-xs text-muted-foreground font-semibold text-center py-6">No orders</p>
         ) : (
           orders.map((order) => (
             <OrderCard

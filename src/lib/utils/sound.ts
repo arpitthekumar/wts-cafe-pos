@@ -7,6 +7,11 @@
 let alarmAudio: HTMLAudioElement | null = null
 let unlocked = false
 
+export function isPageVisible(): boolean {
+  if (typeof document === "undefined") return false
+  return document.visibilityState === "visible"
+}
+
 // 🔓 Unlock audio once (MANDATORY)
 export function unlockAudio() {
   if (unlocked) return
@@ -73,6 +78,16 @@ export const sounds = {
   // ✅ Payment / success
   success: () => {
     playOneShot("/sounds/success.mp3", 0.6)
+  },
+
+  // 📝 Feedback notification sound
+  feedback: () => {
+    playOneShot("/sounds/success.mp3", 0.5)
+  },
+
+  // 🔔 Generic notification sound
+  notification: () => {
+    playOneShot("/sounds/success.mp3", 0.5)
   },
 }
 

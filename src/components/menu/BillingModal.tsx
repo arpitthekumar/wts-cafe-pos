@@ -162,10 +162,12 @@ export function BillingModal({ order, currency, cafeName, onClose, onPaymentComp
     </tbody>
   </table>
   
-  <div class="total">
-    <p>Total: ${formatCurrency(order.total, currency)}</p>
-    <p>Payment Method: ${paymentMethods.find(m => m.value === paymentMethod)?.label || paymentMethod}</p>
-    <p>Paid At: ${new Date().toLocaleString()}</p>
+  <div class="total" style="text-align: right; border-top: 1px solid #000; padding-top: 10px; margin-top: 20px;">
+    <p style="margin: 5px 0;">Subtotal: ${formatCurrency(order.total, currency)}</p>
+    <p style="margin: 5px 0;">GST (18%): ${formatCurrency(order.total * 0.18, currency)}</p>
+    <p style="margin: 5px 0; font-size: 18px; font-weight: bold;">Grand Total: ${formatCurrency(order.total * 1.18, currency)}</p>
+    <p style="margin: 15px 0 5px 0; font-size: 13px; color: #555;">Payment Method: ${paymentMethods.find(m => m.value === paymentMethod)?.label || paymentMethod}</p>
+    <p style="margin: 5px 0; font-size: 13px; color: #555;">Paid At: ${new Date().toLocaleString()}</p>
   </div>
   
   <div class="footer">
@@ -193,9 +195,19 @@ export function BillingModal({ order, currency, cafeName, onClose, onPaymentComp
       <div className="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
         <h2 className="mb-4 text-xl font-bold">Payment & Billing</h2>
         
-        <div className="mb-4">
-          <p className="text-sm text-muted-foreground mb-2">Order Total:</p>
-          <p className="text-2xl font-bold">{formatCurrency(order.total, currency)}</p>
+        <div className="mb-6 space-y-2.5 border-b pb-4">
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Subtotal:</span>
+            <span>{formatCurrency(order.total, currency)}</span>
+          </div>
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>GST (18%):</span>
+            <span>{formatCurrency(order.total * 0.18, currency)}</span>
+          </div>
+          <div className="flex justify-between text-lg font-bold">
+            <span>Grand Total:</span>
+            <span className="text-xl font-extrabold text-orange-600 dark:text-orange-400">{formatCurrency(order.total * 1.18, currency)}</span>
+          </div>
         </div>
 
         <div className="mb-4">

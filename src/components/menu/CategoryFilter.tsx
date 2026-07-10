@@ -14,13 +14,13 @@ export function CategoryFilter({
   onSelectCategory,
 }: CategoryFilterProps) {
   return (
-    <div className="mb-6 flex flex-wrap gap-2">
+    <div className="mb-8 flex flex-wrap gap-2.5 pb-2">
       <button
         onClick={() => onSelectCategory("all")}
-        className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+        className={`rounded-chip px-5 py-2.5 text-sm font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
           selectedCategory === "all"
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground hover:bg-muted/80"
+            ? "bg-orange-500 text-white shadow-md shadow-orange-500/25 scale-[1.02]"
+            : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-800/80 border border-zinc-200/30 dark:border-zinc-800/30 hover:scale-103 active:scale-95"
         }`}
       >
         All
@@ -29,19 +29,16 @@ export function CategoryFilter({
         <button
           key={category.id}
           onClick={() => onSelectCategory(category.id)}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+          className={`rounded-chip px-5 py-2.5 text-sm font-semibold tracking-wide transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
             selectedCategory === category.id
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              ? "bg-orange-500 text-white shadow-md shadow-orange-500/25 scale-[1.02]"
+              : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-800/80 border border-zinc-200/30 dark:border-zinc-800/30 hover:scale-103 active:scale-95"
           }`}
         >
-          {category.icon} {category.name}
+          {category.icon && <span className="text-base">{category.icon}</span>}
+          <span>{category.name}</span>
         </button>
       ))}
     </div>
   )
 }
-
-
-
-

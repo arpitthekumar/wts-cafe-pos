@@ -17,6 +17,7 @@ import { BillingModal } from "./BillingModal"
 import { ThemeToggle } from "../common"
 import { useCafeCurrency } from "@/hooks/useCafeCurrency"
 import { formatCurrency } from "@/lib/utils/currency"
+import { ShoppingBag } from "lucide-react"
 
 export function CustomerMenuPage() {
   const params = useParams()
@@ -42,6 +43,7 @@ export function CustomerMenuPage() {
   const [showFeedbackNotification, setShowFeedbackNotification] = useState(false)
   const [previousOrderStatus, setPreviousOrderStatus] = useState<string | null>(null)
   const [showBillingModal, setShowBillingModal] = useState(false)
+  const [orderNotes, setOrderNotes] = useState("")
   const currency = useCafeCurrency(cafe?.id)
 
   useEffect(() => {
@@ -252,12 +254,14 @@ export function CustomerMenuPage() {
           items: cart,
           customerName: customerDetails.name,
           customerEmail: customerDetails.email,
+          notes: orderNotes,
         }),
       })
 
       if (response.ok) {
         setCart([])
         setShowCart(false)
+        setOrderNotes("")
         
         // Create or update table session
         if (customerDetails) {
@@ -371,16 +375,20 @@ export function CustomerMenuPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
-          <h1 className="text-xl font-bold sm:text-2xl">
-            {cafe ? `${cafe.name} Menu` : "Loading..."}
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+          <h1 className="font-headline text-lg sm:text-xl font-extrabold text-orange-500 tracking-tight">
+            {cafe ? cafe.name : "Loading..."}
           </h1>
           <div className="flex items-center gap-2">
             <CallEmployeeButton cafeId={cafe?.id || ""} tableId={table?.id || ""} />
-            <Button onClick={() => setShowCart(!showCart)} variant="outline" size="sm">
-              Cart ({cart.length}) - {formatCurrency(total, currency)}
-            </Button>
+            <button
+              onClick={() => setShowCart(!showCart)}
+              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 h-10 rounded-chip font-bold text-sm shadow-md shadow-orange-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <ShoppingBag className="w-4.5 h-4.5" />
+              <span>{cart.length} • {formatCurrency(total, currency)}</span>
+            </button>
             <ThemeToggle/>
           </div>
         </div>
@@ -459,6 +467,9 @@ export function CustomerMenuPage() {
         onSubmitOrder={handlePlaceOrder}
         isSubmitting={isSubmitting}
         currency={currency}
+        notes={orderNotes}
+        onNotesChange={setOrderNotes}
+        tableNumber={table?.number}
       />
 
       {showCustomerForm && (

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FoodDash | High-Fidelity Dashboard</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#984800",
+                    "surface-bright": "#f8f9fa",
+                    "on-primary-fixed-variant": "#733500",
+                    "primary-fixed": "#ffdbc8",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-error": "#ffffff",
+                    "surface-container": "#edeeef",
+                    "tertiary-fixed": "#e5e2e1",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#410007",
+                    "inverse-primary": "#ffb689",
+                    "on-primary-container": "#5e2a00",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "tertiary": "#5f5e5e",
+                    "surface-variant": "#e1e3e4",
+                    "secondary-fixed": "#ffdad8",
+                    "inverse-surface": "#2e3132",
+                    "secondary-container": "#ff5a5f",
+                    "background": "#f8f9fa",
+                    "on-primary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#fc8019",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#92001b",
+                    "inverse-on-surface": "#f0f1f2",
+                    "secondary-fixed-dim": "#ffb3b0",
+                    "outline-variant": "#dec1b0",
+                    "error": "#ba1a1a",
+                    "on-background": "#191c1d",
+                    "error-container": "#ffdad6",
+                    "surface": "#f8f9fa",
+                    "on-surface": "#191c1d",
+                    "on-surface-variant": "#574236",
+                    "surface-dim": "#d9dadb",
+                    "tertiary-container": "#a4a2a2",
+                    "on-tertiary-container": "#393939",
+                    "on-secondary-container": "#60000e",
+                    "surface-tint": "#984800",
+                    "surface-container-high": "#e7e8e9",
+                    "secondary": "#b52330",
+                    "primary-fixed-dim": "#ffb689",
+                    "on-primary-fixed": "#311300",
+                    "on-tertiary-fixed": "#1b1b1b",
+                    "outline": "#8b7264",
+                    "on-tertiary-fixed-variant": "#474746"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "12px",
+                    "2xl": "20px",
+                    "chip": "14px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "lg": "40px",
+                    "md": "24px",
+                    "xl": "64px",
+                    "margin-desktop": "48px",
+                    "margin-mobile": "16px",
+                    "gutter": "20px",
+                    "xs": "8px",
+                    "sm": "16px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-md": ["Be Vietnam Pro"],
+                    "body-lg": ["Be Vietnam Pro"],
+                    "body-md": ["Be Vietnam Pro"],
+                    "label-sm": ["Be Vietnam Pro"],
+                    "headline-xl": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-search {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .pop-effect:active {
+            transform: scale(0.9);
+        }
+        .stagger-card {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: cardFadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+        @keyframes cardFadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .cart-slide {
+            animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        .food-image-hover:hover {
+            transform: scale(1.1) rotate(2deg);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+<!-- TOP NAVIGATION BAR -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/20 shadow-xl px-margin-mobile md:px-margin-desktop py-4 flex justify-between items-center h-20">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-extrabold text-primary-container">FoodDash</span>
+</div>
+<div class="hidden md:flex flex-1 max-w-xl mx-8 relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full glass-search rounded-full py-3 pl-12 pr-6 focus:ring-2 focus:ring-primary-container outline-none font-body-md transition-all" placeholder="Search for your favorite hunger cure..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-on-surface-variant text-2xl">notifications</span>
+<span class="absolute -top-1 -right-1 bg-secondary w-2 h-2 rounded-full"></span>
+</div>
+<div class="flex items-center gap-3 bg-primary-container/10 px-4 py-2 rounded-full cursor-pointer hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container font-bold">shopping_basket</span>
+<span class="font-label-md text-primary-container">3 Items</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border-2 border-primary-container">
+<img class="w-full h-full object-cover" data-alt="A professional close-up headshot of a smiling young woman with a warm, friendly expression, set against a blurred urban cafe background. She has soft natural lighting on her face, reflecting a modern, tech-savvy user persona. High-quality digital photography style with shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_myqbRVwrRGds98OLTdam7GAPiX3k37vmLka27dF3-1DT_sEYvso8LGLEAYq3jkx5LJjOFLxbUHbW1sEOhjXdPBy3PT7mDvABevU9skQMwaomyB5KCyWw6NoPI4DHXYTumToawEvu9XLjnz_jsn6R3E72HYxpcCxqLDKla2tkRTzwuHeoPnt3gyxp8FpN6eMsr4gILHdz0pK4LmQ8PdTX9Q8G03RMi9QuH_EZB_8qmegu4Dg14ZfKDAyGwMZF6lg6pLE0RaR5DSys"/>
+</div>
+</div>
+</header>
+<div class="flex pt-20 h-screen overflow-hidden">
+<!-- LEFT SIDE NAVIGATION -->
+<aside class="fixed left-0 top-20 h-[calc(100vh-80px)] w-64 bg-surface-container-lowest hidden lg:flex flex-col p-4 border-r border-outline-variant/10 shadow-xl z-40">
+<div class="mb-8 p-4">
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Categories</h3>
+<p class="text-on-surface-variant text-sm">Hungry for more?</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-2xl p-4 font-bold shadow-lg shadow-primary-container/20" href="#">
+<span class="material-symbols-outlined">coffee</span>
+<span>Coffee</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant p-4 hover:bg-surface-container-low rounded-2xl transition-all hover:scale-103" href="#">
+<span class="material-symbols-outlined">lunch_dining</span>
+<span>Burger</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant p-4 hover:bg-surface-container-low rounded-2xl transition-all hover:scale-103" href="#">
+<span class="material-symbols-outlined">local_pizza</span>
+<span>Pizza</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant p-4 hover:bg-surface-container-low rounded-2xl transition-all hover:scale-103" href="#">
+<span class="material-symbols-outlined">local_bar</span>
+<span>Drinks</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant p-4 hover:bg-surface-container-low rounded-2xl transition-all hover:scale-103" href="#">
+<span class="material-symbols-outlined">icecream</span>
+<span>Dessert</span>
+</a>
+</nav>
+<div class="mt-auto p-4 bg-primary-fixed rounded-2xl">
+<p class="text-on-primary-fixed font-bold text-sm mb-2">Upgrade to Premium</p>
+<p class="text-on-primary-fixed-variant text-xs mb-4">Get free delivery on all orders over ₹200.</p>
+<button class="w-full bg-primary text-on-primary rounded-xl py-2 font-label-md hover:brightness-110 transition-all">Go Pro</button>
+</div>
+</aside>
+<!-- MAIN PRODUCT GRID -->
+<main class="flex-1 ml-0 lg:ml-64 mr-0 xl:mr-96 overflow-y-auto px-margin-mobile md:px-margin-desktop py-8 pb-32 lg:pb-8">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h1 class="font-headline-lg text-headline-lg mb-2">Morning Brews</h1>
+<p class="text-on-surface-variant">Hand-picked coffee to kickstart your day.</p>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">tune</span></button>
+<button class="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">grid_view</span></button>
+</div>
+</div>
+<!-- Bento-ish Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+<!-- Product Card 1 -->
+<div class="stagger-card bg-surface-container-lowest rounded-2xl shadow-xl hover:scale-103 transition-all duration-300 group overflow-hidden" style="animation-delay: 0.1s;">
+<div class="relative h-56 overflow-hidden m-4 rounded-xl">
+<img class="w-full h-full object-cover transition-transform duration-500 food-image-hover" data-alt="A steaming, artisanal cappuccino in a sleek white ceramic cup, topped with intricate latte art. The background is a warm, sunlit modern kitchen with soft focus. The food is captured in high detail, emphasizing creamy texture and rich coffee tones, vibrant and appetizing for a premium food delivery app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKrSxmV7-rz311b-puJCgYuTXObzeJwMd01SH-ZvZ-8PTTcVjcw8aIhjl40HjppIK_d8vYIHomD-vm9icr28TvdOrs9oZ7PcrSUMHzr5eMscz-Ze9uhBHVk0MsoZv52AW2-60Z7WsXtmrR1puMvoOgfTbW2D6SquxkN2d6xlitS8d_5I7Fu8lhpM5rn4P9MEUZtSd2wxyEmSjHT5XH8bO5SwOh29j2ujdHqN8wk-E57JnCH_NvU3lyDs1_-QmO75dWZ_XW-7Alh0ot"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-yellow-500 text-sm fill-icon" style="font-variation-settings: 'FILL' 1">star</span>
+<span class="text-xs font-bold text-on-surface">4.8</span>
+</div>
+</div>
+<div class="px-6 pb-6">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-primary transition-colors">Cappuccino</h3>
+<span class="font-headline-md text-headline-md text-primary-container">₹120</span>
+</div>
+<p class="text-on-surface-variant text-sm mb-6 line-clamp-2">Double shot of espresso with extra creamy steamed milk foam.</p>
+<div class="flex justify-between items-center">
+<span class="text-xs font-bold text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">15-20 min</span>
+<button class="pop-effect w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center hover:bg-primary transition-all shadow-lg shadow-primary-container/30">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="stagger-card bg-surface-container-lowest rounded-2xl shadow-xl hover:scale-103 transition-all duration-300 group overflow-hidden" style="animation-delay: 0.2s;">
+<div class="relative h-56 overflow-hidden m-4 rounded-xl">
+<img class="w-full h-full object-cover transition-transform duration-500 food-image-hover" data-alt="A tall, elegant glass of layered Caramel Macchiato with drizzled golden caramel sauce and thick vanilla-infused foam. Ice cubes glisten at the bottom. The lighting is bright and airy, reflecting a modern cafe aesthetic. High-contrast colors of deep espresso and creamy whites dominate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGY8KXgY_03WDWd4LePhMdci3vCupKEQ8BEMPYRNJWovoqP4ULUB1XKIDmXqZXtdTGkyHS2DxUttaxsosPDFr0dVtrCW_Fg24nqhtf5eKamqI_PffwO7tLE68vgyVhdhTU_t2yRahzp9DlRueYT2gHfFv39qK1Xrisafb1ciOK9KYAy77CJn-ILFmF1TZfAof9KiJy203MKmJ2rjU-S3GSr4_VaAyagAVSMRFKZTLnQMwcgLzPRq7NvDIkom9VnRVV5mtRsZF5CM_-"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-yellow-500 text-sm fill-icon" style="font-variation-settings: 'FILL' 1">star</span>
+<span class="text-xs font-bold text-on-surface">4.9</span>
+</div>
+</div>
+<div class="px-6 pb-6">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-primary transition-colors">Caramel Macchiato</h3>
+<span class="font-headline-md text-headline-md text-primary-container">₹180</span>
+</div>
+<p class="text-on-surface-variant text-sm mb-6 line-clamp-2">Sweet caramel sauce mixed with rich espresso and chilled milk.</p>
+<div class="flex justify-between items-center">
+<span class="text-xs font-bold text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">10-15 min</span>
+<button class="pop-effect w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center hover:bg-primary transition-all shadow-lg shadow-primary-container/30">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="stagger-card bg-surface-container-lowest rounded-2xl shadow-xl hover:scale-103 transition-all duration-300 group overflow-hidden" style="animation-delay: 0.3s;">
+<div class="relative h-56 overflow-hidden m-4 rounded-xl">
+<img class="w-full h-full object-cover transition-transform duration-500 food-image-hover" data-alt="A vibrant glass of refreshing cold brew coffee with a splash of almond milk, garnished with a sprig of mint and floating ice. Photographed in a minimalist studio setting with soft shadows. The visual focuses on the deep amber coffee tones and the clean, high-tech food aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdvY0BBEKP4Qy9QnzpT_wdNrZzUU-QXW_eIW5r7dHaZStr_Uvqfu64v2IqKKaZuPDuEVD1bkofrTjLRx4b8pkuP3FG7tEkkUrJ4BDDsRV42VpKRGntQaZAWtxXYftrIQcUozUqZH6Q1vjvKN0uKTHHevbT_2NkWNguXWPmSdGIYCZ5VweOzetq7KNAUIgherY5ZaGw9fexBNZ4bXjE31ZukH42DfJyi1_pdRP7SAZTGVolv1RHoBhO4U05UtqprE1AdEtrvWzHwdrm"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-yellow-500 text-sm fill-icon" style="font-variation-settings: 'FILL' 1">star</span>
+<span class="text-xs font-bold text-on-surface">4.7</span>
+</div>
+</div>
+<div class="px-6 pb-6">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-primary transition-colors">Vanilla Cold Brew</h3>
+<span class="font-headline-md text-headline-md text-primary-container">₹150</span>
+</div>
+<p class="text-on-surface-variant text-sm mb-6 line-clamp-2">12-hour steeped cold brew infused with premium vanilla bean extract.</p>
+<div class="flex justify-between items-center">
+<span class="text-xs font-bold text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">5-10 min</span>
+<button class="pop-effect w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center hover:bg-primary transition-all shadow-lg shadow-primary-container/30">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="stagger-card bg-surface-container-lowest rounded-2xl shadow-xl hover:scale-103 transition-all duration-300 group overflow-hidden" style="animation-delay: 0.4s;">
+<div class="relative h-56 overflow-hidden m-4 rounded-xl">
+<img class="w-full h-full object-cover transition-transform duration-500 food-image-hover" data-alt="A steaming mug of Belgian Hot Chocolate, thick and rich, topped with toasted marshmallows and dark chocolate shavings. The background is a cozy, warm-toned cafe with ambient soft lighting. The image emphasizes the gooey marshmallow texture and deep cocoa color, perfect for a high-end food delivery app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFxOW8i-fO6PzRf6ljPCJtiEPzvfBHDxFFdmf2w_rap5LYkGm1ZFLIcxcUKoutRmcgt4yAVxdjZ85AhnZUsvIh0GJq0UH2Ubfomt8h14_FnVRpMywL0qnfco2gfe3-qsxDUPO-HyucPVk32BcOx1vsPuAzsJq0aUstyz7KPoNOfB83_bmJbj_xiH1eq4SEKjfgQEN9S0RPOpaLZAZHe6Dv2x8ty-hvF5nMfOGvncIsZ6-KUeNGCoAaJy3lagG221m__6lZscwqTezn"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-yellow-500 text-sm fill-icon" style="font-variation-settings: 'FILL' 1">star</span>
+<span class="text-xs font-bold text-on-surface">4.9</span>
+</div>
+</div>
+<div class="px-6 pb-6">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-primary transition-colors">Belgian Cocoa</h3>
+<span class="font-headline-md text-headline-md text-primary-container">₹190</span>
+</div>
+<p class="text-on-surface-variant text-sm mb-6 line-clamp-2">Authentic 70% dark Belgian chocolate melted into whole milk.</p>
+<div class="flex justify-between items-center">
+<span class="text-xs font-bold text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">15-20 min</span>
+<button class="pop-effect w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center hover:bg-primary transition-all shadow-lg shadow-primary-container/30">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- RIGHT SIDE CART (STICKY) -->
+<aside class="fixed right-0 top-20 h-[calc(100vh-80px)] w-96 bg-surface-container-low hidden xl:flex flex-col p-6 border-l border-outline-variant/10 shadow-2xl cart-slide z-40">
+<div class="flex items-center justify-between mb-8">
+<h2 class="font-headline-md text-headline-md">Current Order</h2>
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold">3 ITEMS</span>
+</div>
+<!-- Cart Item List -->
+<div class="flex-1 overflow-y-auto space-y-6 pr-2">
+<!-- Item 1 -->
+<div class="flex items-center gap-4 group">
+<div class="w-16 h-16 rounded-xl overflow-hidden bg-white shadow-sm border border-outline-variant/10">
+<img class="w-full h-full object-cover" data-alt="Close up of a cappuccino in a small cup, focus on the latte art." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc55VR4rRnA--Z4ku7oiegSQJjqeIJfPzrWvSRghO3Qka1sLwNYsok7mYLzERWB7SrHNE2Kd7O1e9pA93f_QxwzSj1n-1boXN_YxQ5O-4Ge1yrm2f8Shmz3o8rvEAqqPE7TfxmcUvAebI5KWfYhN65emXCW8jRT7njwiNcUG0cLFr9N088AjyxeYU-0OU5XBhTCLOSR_LpXZwRtx4qxvIvYXkr_ZfsE5WnW-BedcXwPqJUOX4vttuQVuHZjCNWXudMdVu2yhOZz6Mm"/>
+</div>
+<div class="flex-1">
+<p class="font-bold text-on-surface group-hover:text-primary transition-colors">Cappuccino</p>
+<p class="text-xs text-on-surface-variant">x 2</p>
+</div>
+<p class="font-bold text-primary-container">₹240</p>
+<button class="text-on-surface-variant hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg">close</span></button>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center gap-4 group">
+<div class="w-16 h-16 rounded-xl overflow-hidden bg-white shadow-sm border border-outline-variant/10">
+<img class="w-full h-full object-cover" data-alt="A gourmet burger with melting cheese and fresh lettuce." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKy5d8ciKIuv6svpjcAZs4HA941Sne7l5VLDN0LLEfsIwMMUJ1mnyiUeTHBo0AwBRek9zF-1UrGQThM8AXyDiclKP5gotYxkGqMqidQK3rCgwGT_zTZhFCEpkLaqJQgKJPVg0BnsLcZL-jWEjVKsnYFLAhhp5AF7S889wTcNB2wXs40Mz8yT7gmtYhZyM1qvBLEvM7nYgQ5iA1yWCyGMNuElXlWPMyf239MlP4lKjO7eg4HtPMp4RVq_BHZzgRJvX87h7gwHryAx82"/>
+</div>
+<div class="flex-1">
+<p class="font-bold text-on-surface group-hover:text-primary transition-colors">Classic Burger</p>
+<p class="text-xs text-on-surface-variant">x 1</p>
+</div>
+<p class="font-bold text-primary-container">₹280</p>
+<button class="text-on-surface-variant hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg">close</span></button>
+</div>
+</div>
+<!-- Pricing Summary -->
+<div class="mt-8 border-t border-outline-variant/20 pt-6 space-y-3">
+<div class="flex justify-between text-on-surface-variant">
+<span>Subtotal</span>
+<span class="font-bold">₹520</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>GST (18%)</span>
+<span class="font-bold">₹93.60</span>
+</div>
+<div class="flex justify-between text-on-surface-variant text-sm">
+<span>Delivery Fee</span>
+<span class="font-bold text-primary-container">FREE</span>
+</div>
+<div class="flex justify-between items-center pt-4 mt-2 border-t border-dashed border-outline-variant/30">
+<span class="font-headline-md text-headline-md">Total</span>
+<span class="font-headline-md text-headline-md text-primary-container">₹613.60</span>
+</div>
+</div>
+<!-- Place Order Button -->
+<button class="mt-8 w-full bg-gradient-to-r from-primary-container to-secondary py-4 rounded-xl text-on-primary font-bold shadow-lg shadow-primary-container/30 hover:scale-[1.02] active:scale-95 transition-all">
+                Place Order
+            </button>
+</aside>
+</div>
+<!-- BOTTOM NAVBAR (MOBILE ONLY) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface/80 backdrop-blur-xl border-t border-outline-variant/20 lg:hidden">
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-xl p-2 px-4 transition-all" href="#">
+<span class="material-symbols-outlined fill-icon" style="font-variation-settings: 'FILL' 1">restaurant</span>
+<span class="text-[10px] font-bold">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-fixed/20 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-[10px] font-bold">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-fixed/20 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="text-[10px] font-bold">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-fixed/20 rounded-xl transition-all relative" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-[10px] font-bold">Cart</span>
+<span class="absolute top-1 right-1 bg-secondary text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center">3</span>
+</a>
+</nav>
+<!-- Floating Action Button (Mobile Contextual - "Order Now" on Home) -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary-container text-on-primary rounded-full shadow-2xl flex items-center justify-center lg:hidden z-50 pop-effect">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+<script>
+        // Micro-interactions and entrance effects
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.stagger-card');
+            
+            // Add click interaction for 'Add' buttons
+            const addButtons = document.querySelectorAll('.pop-effect');
+            addButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Visual feedback for adding to cart
+                    const originalContent = btn.innerHTML;
+                    btn.innerHTML = '<span class="material-symbols-outlined">check</span>';
+                    btn.classList.add('bg-green-500');
+                    btn.classList.remove('bg-primary-container');
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalContent;
+                        btn.classList.remove('bg-green-500');
+                        btn.classList.add('bg-primary-container');
+                    }, 1000);
+                });
+            });
+
+            // Handle Search Bar Focus Glass Effect Enhancement
+            const searchInput = document.querySelector('input[type="text"]');
+            searchInput.addEventListener('focus', () => {
+                searchInput.parentElement.classList.add('scale-105');
+            });
+            searchInput.addEventListener('blur', () => {
+                searchInput.parentElement.classList.remove('scale-105');
+            });
+        });
+    </script>
+</body></html>

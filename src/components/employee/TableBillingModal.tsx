@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { Order, PaymentMethod, Currency, Table } from "@/lib/types"
-import { Button, Input, Label } from "@/components/ui"
+import { Button, Label } from "@/components/ui"
 import { useCafeCurrency } from "@/hooks/useCafeCurrency"
 import { formatCurrency } from "@/lib/utils/currency"
+import { ShieldCheck, Receipt, Coins, X } from "lucide-react"
 
 interface TableBillingModalProps {
   table: Table
@@ -28,11 +29,10 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
 
   async function fetchOrders() {
     try {
-      // First get the active table session to get customer email
       const sessionRes = await fetch(`/api/table-sessions?tableId=${table.id}`)
       let customerEmail: string | null = null
       if (sessionRes.ok) {
-        const session = await sessionRes.ok ? await sessionRes.json() : null
+        const session = await sessionRes.json()
         if (session && session.isActive) {
           customerEmail = session.customerEmail
         }
@@ -42,7 +42,6 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
       if (response.ok) {
         let ordersData = await response.json()
         
-        // Filter to only show orders for the current customer if session exists
         if (customerEmail) {
           ordersData = ordersData.filter((o: Order) => 
             o.customerEmail?.toLowerCase() === customerEmail?.toLowerCase()
@@ -50,7 +49,6 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
         }
         
         setOrders(ordersData)
-        // Select all orders by default
         setSelectedOrders(new Set(ordersData.map((o: Order) => o.id)))
       }
     } catch (error) {
@@ -72,6 +70,8 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
 
   const selectedOrdersList = orders.filter(o => selectedOrders.has(o.id))
   const totalAmount = selectedOrdersList.reduce((sum, o) => sum + o.total, 0)
+  const gstAmount = totalAmount * 0.18
+  const grandTotal = totalAmount + gstAmount
 
   const paymentMethods: { value: PaymentMethod; label: string; icon: string }[] = [
     { value: "cash", label: "Cash", icon: "💵" },
@@ -92,7 +92,6 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
       const billNumber = `BILL-${Date.now()}`
       const now = new Date().toISOString()
 
-      // Process all selected orders - mark as paid and generate bill
       for (const order of selectedOrdersList) {
         await fetch(`/api/orders/${order.id}`, {
           method: "PATCH",
@@ -106,17 +105,7 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
         })
       }
       
-      // Now customer can download the bill from their side
-
-      // Generate combined bill (staff downloads it)
       await generateAndDownloadBill(selectedOrdersList, selectedMethod, billNumber, currency, cafeName, table.number)
-
-      // DO NOT mark table as cleaning or end session here
-      // That should only happen when customer clicks "Leave Table"
-      
-      // Store bill info for customer to download later
-      // The order status is already set to "completed" above
-
       onBillingComplete()
       onClose()
     } catch (error) {
@@ -144,46 +133,70 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
   <title>Bill - ${billNumber}</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
       max-width: 600px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 30px;
+      color: #333;
     }
     .header {
       text-align: center;
-      border-bottom: 2px solid #000;
+      border-bottom: 2px solid #333;
       padding-bottom: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+    }
+    .header h1 {
+      margin: 0 0 10px 0;
+      font-size: 28px;
+      color: #fc8019;
+    }
+    .header p {
+      margin: 5px 0;
+      color: #666;
+      font-size: 14px;
     }
     .bill-info {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+      font-size: 14px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
     th, td {
-      padding: 10px;
+      padding: 12px 10px;
       text-align: left;
-      border-bottom: 1px solid #ddd;
+      border-bottom: 1px solid #eee;
     }
     th {
-      background-color: #f2f2f2;
+      background-color: #f9f9f9;
+      font-weight: bold;
     }
     .total {
       text-align: right;
-      font-size: 18px;
-      font-weight: bold;
+      border-top: 2px solid #333;
+      padding-top: 15px;
       margin-top: 20px;
+      font-size: 14px;
+    }
+    .total p {
+      margin: 6px 0;
+    }
+    .grand-total {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fc8019;
     }
     .footer {
-      margin-top: 40px;
+      margin-top: 50px;
       text-align: center;
       font-size: 12px;
-      color: #666;
+      color: #999;
+      border-top: 1px dashed #ddd;
+      padding-top: 20px;
     }
   </style>
 </head>
@@ -196,7 +209,7 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
   
   <div class="bill-info">
     <div>
-      <p><strong>Table:</strong> ${tableNumber}</p>
+      <p><strong>Table:</strong> #${tableNumber}</p>
       ${orders[0]?.customerName ? `<p><strong>Customer:</strong> ${orders[0].customerName}</p>` : ""}
     </div>
   </div>
@@ -223,14 +236,16 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
   </table>
   
   <div class="total">
-    <p>Total: ${formatCurrency(totalAmount, currency)}</p>
-    <p>Payment Method: ${paymentMethods.find(m => m.value === paymentMethod)?.label || paymentMethod}</p>
-    <p>Paid At: ${new Date().toLocaleString()}</p>
+    <p>Subtotal: ${formatCurrency(totalAmount, currency)}</p>
+    <p>GST (18%): ${formatCurrency(totalAmount * 0.18, currency)}</p>
+    <p class="grand-total">Grand Total: ${formatCurrency(totalAmount * 1.18, currency)}</p>
+    <p style="margin-top: 15px; color: #666; font-size: 12px;">Payment Method: ${paymentMethods.find(m => m.value === paymentMethod)?.label || paymentMethod}</p>
+    <p style="color: #666; font-size: 12px;">Paid At: ${new Date().toLocaleString()}</p>
   </div>
   
   <div class="footer">
-    <p>Thank you for visiting!</p>
-    <p>Generated on ${new Date().toLocaleString()}</p>
+    <p>Thank you for dining with us!</p>
+    <p>Powered by WTS Café POS</p>
   </div>
 </body>
 </html>
@@ -249,99 +264,155 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
-          <p>Loading orders...</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+        <div className="w-full max-w-md rounded-[20px] border bg-background p-6 shadow-2xl flex flex-col items-center justify-center min-h-[160px]">
+          <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <p className="mt-3 text-sm font-bold text-muted-foreground">Loading orders...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border bg-background p-6 shadow-lg">
-        <h2 className="mb-4 text-xl font-bold">Table {table.number} - Billing</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[20px] border border-border bg-card p-6 shadow-2xl flex flex-col justify-between">
+        {/* Header Title */}
+        <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+              <Receipt className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-headline text-base font-extrabold text-foreground">
+                Table {table.number} - Process Bill
+              </h2>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
         
         {orders.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No orders found for this table</p>
-            <Button variant="outline" onClick={onClose} className="mt-4">
+            <p className="text-muted-foreground font-semibold">No active orders found for this table.</p>
+            <button
+              onClick={onClose}
+              className="mt-4 px-6 h-10 rounded-chip border border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900 text-foreground font-bold text-xs transition-all cursor-pointer"
+            >
               Close
-            </Button>
+            </button>
           </div>
         ) : (
           <>
-            <div className="mb-4">
-              <Label>Select Orders to Bill</Label>
-              <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                {orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className={`flex items-center justify-between rounded border p-3 cursor-pointer ${
-                      selectedOrders.has(order.id) ? "border-primary bg-primary/5" : ""
-                    }`}
-                    onClick={() => toggleOrder(order.id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedOrders.has(order.id)}
-                        onChange={() => toggleOrder(order.id)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <div>
-                        <p className="font-medium">Order #{order.id.slice(-6)}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {order.items.length} items • {order.status} • {new Date(order.createdAt).toLocaleTimeString()}
-                        </p>
+            {/* Orders checklist */}
+            <div className="mb-5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Orders to Bill</Label>
+              <div className="mt-2.5 space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                {orders.map((order) => {
+                  const isSelected = selectedOrders.has(order.id)
+                  return (
+                    <div
+                      key={order.id}
+                      onClick={() => toggleOrder(order.id)}
+                      className={`flex items-center justify-between rounded-xl border p-3.5 cursor-pointer transition-all duration-200 ${
+                        isSelected 
+                          ? "border-orange-500 bg-orange-500/5 dark:bg-orange-500/10" 
+                          : "border-border/60 hover:bg-muted/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleOrder(order.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                        />
+                        <div>
+                          <p className="font-headline font-bold text-sm text-foreground">Order #{order.id.slice(-6).toUpperCase()}</p>
+                          <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                            {order.items.length} items • {order.status} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
                       </div>
+                      <p className="font-headline font-extrabold text-sm text-foreground">{formatCurrency(order.total * 1.18, currency)}</p>
                     </div>
-                    <p className="font-bold">{formatCurrency(order.total, currency)}</p>
-                  </div>
-                ))}
+                  )}
+                )}
               </div>
             </div>
 
-            <div className="mb-4 rounded-lg border bg-muted/50 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold">Total Amount:</span>
-                <span className="text-2xl font-bold">{formatCurrency(totalAmount, currency)}</span>
+            {/* Bill Details Breakdown (Consistent with Zomato Invoice) */}
+            <div className="mb-5 space-y-2.5 rounded-2xl border border-border p-4 bg-muted/20 dark:bg-zinc-900/10">
+              <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                <span>Subtotal (Selected Items)</span>
+                <span>{formatCurrency(totalAmount, currency)}</span>
+              </div>
+              <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                <span>GST (18%)</span>
+                <span>{formatCurrency(gstAmount, currency)}</span>
+              </div>
+              <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                <span>Restaurant Service Fee</span>
+                <span className="text-green-600 dark:text-green-400 font-bold uppercase text-[10px]">FREE</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-border/80 pt-2.5 mt-2 font-headline">
+                <span className="font-extrabold text-foreground text-sm">Grand Total</span>
+                <span className="text-lg font-extrabold text-orange-500 dark:text-orange-400">{formatCurrency(grandTotal, currency)}</span>
               </div>
             </div>
 
-            <div className="mb-4">
-              <Label>Payment Method</Label>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                {paymentMethods.map((method) => (
-                  <Button
-                    key={method.value}
-                    variant={selectedMethod === method.value ? "default" : "outline"}
-                    onClick={() => setSelectedMethod(method.value)}
-                    className="flex items-center gap-2"
-                  >
-                    <span>{method.icon}</span>
-                    <span>{method.label}</span>
-                  </Button>
-                ))}
+            {/* Payment Method Selector */}
+            <div className="mb-6">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Payment Method</Label>
+              <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {paymentMethods.map((method) => {
+                  const isActive = selectedMethod === method.value
+                  return (
+                    <button
+                      key={method.value}
+                      onClick={() => setSelectedMethod(method.value)}
+                      className={`h-9 text-xs font-bold rounded-chip flex items-center justify-center gap-1.5 transition-all duration-200 border cursor-pointer ${
+                        isActive
+                          ? "bg-orange-500 border-orange-500 text-white shadow-sm"
+                          : "border-border hover:bg-muted/40 text-foreground"
+                      }`}
+                    >
+                      <span>{method.icon}</span>
+                      <span>{method.label}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="flex-1"
+            {/* Actions Buttons */}
+            <div className="flex gap-3">
+              <button
                 disabled={processing}
+                onClick={onClose}
+                className="flex-1 h-10.5 rounded-chip border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-foreground font-bold text-xs transition-colors cursor-pointer"
               >
                 Cancel
-              </Button>
-              <Button
-                onClick={handleBilling}
-                className="flex-1"
+              </button>
+              <button
                 disabled={processing || selectedOrdersList.length === 0}
+                onClick={handleBilling}
+                className="flex-1 h-10.5 rounded-chip bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed text-white font-bold text-xs transition-all hover:scale-102 active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-orange-500/15"
               >
-                {processing ? "Processing..." : "Confirm Payment & Generate Bill"}
-              </Button>
+                {processing ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Coins className="w-4 h-4" />
+                    <span>Confirm Payment & Print</span>
+                  </>
+                )}
+              </button>
             </div>
           </>
         )}
@@ -349,4 +420,3 @@ export function TableBillingModal({ table, cafeId, cafeName, onClose, onBillingC
     </div>
   )
 }
-
